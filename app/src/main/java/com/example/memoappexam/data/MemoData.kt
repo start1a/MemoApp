@@ -1,9 +1,16 @@
 package com.example.memoappexam.data
 
 import android.graphics.Bitmap
+import io.realm.RealmObject
+import io.realm.annotations.PrimaryKey
+import java.util.*
 
-data class MemoData(
+open class MemoData(
+    @PrimaryKey
+    var id: String = UUID.randomUUID().toString(),
     var title: String,
-    var text: String,
+    var content: String,
+    var summary: String,
+    var date: String,
     var images: MutableList<Bitmap> = mutableListOf()
-)
+) : RealmObject()
