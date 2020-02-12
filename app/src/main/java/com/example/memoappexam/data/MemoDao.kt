@@ -1,15 +1,15 @@
 package com.example.memoappexam.data
 
 import io.realm.Realm
+import io.realm.RealmList
 import io.realm.RealmResults
-import io.realm.Sort
-import java.sql.Date
+import java.util.*
 
-class MemoDao (private val realm: Realm) {
+class MemoDao(private val realm: Realm) {
 
     fun getAllMemos(): RealmResults<MemoData> {
         return realm.where(MemoData::class.java)
-            .sort("date", Sort.DESCENDING)
+            //.sort("date", Sort.DESCENDING)
             .findAll()
     }
 
@@ -19,17 +19,21 @@ class MemoDao (private val realm: Realm) {
             .findFirst() as MemoData
     }
 
-    fun addUpdateMemo(memoData: MemoData, title: String, content: String) {
+    fun addUpdateMemo(memoData: MemoData, title: String, content: String, images: RealmList<String>) {
         realm.executeTransaction {
             memoData.title = title
             memoData.content = content
             memoData.date = Date()
+            memoData.images = images
 
             if (content.length > 100)
                 memoData.summary = content.substring(0..100)
             else
                 memoData.summary = content
+
+            if (!memoData.isManaged) {
+                it.copyToRealm(memoData)
+            }
         }
     }
-
 }
