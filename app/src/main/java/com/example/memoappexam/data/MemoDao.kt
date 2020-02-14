@@ -3,13 +3,14 @@ package com.example.memoappexam.data
 import io.realm.Realm
 import io.realm.RealmList
 import io.realm.RealmResults
+import io.realm.Sort
 import java.util.*
 
 class MemoDao(private val realm: Realm) {
 
     fun getAllMemos(): RealmResults<MemoData> {
         return realm.where(MemoData::class.java)
-            //.sort("date", Sort.DESCENDING)
+            .sort("date", Sort.DESCENDING)
             .findAll()
     }
 
@@ -34,6 +35,15 @@ class MemoDao(private val realm: Realm) {
             if (!memoData.isManaged) {
                 it.copyToRealm(memoData)
             }
+        }
+    }
+
+    fun deleteMemo(id: String) {
+        realm.executeTransaction {
+            it.where(MemoData::class.java)
+                .equalTo("id", id)
+                .findFirst()
+                ?.deleteFromRealm()
         }
     }
 }

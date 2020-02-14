@@ -2,17 +2,12 @@ package com.example.memoappexam.views
 
 import android.content.Intent
 import android.os.Bundle
-import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import com.example.memoappexam.MemoListViewHolder
 import com.example.memoappexam.R
-import com.example.memoappexam.data.MemoData
 import com.example.memoappexam.viewmodel.MemoListViewModel
 
 import kotlinx.android.synthetic.main.activity_memo_list.*
-import java.util.*
 
 class MemoListActivity : AppCompatActivity() {
 
@@ -24,7 +19,7 @@ class MemoListActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         fab.setOnClickListener { view ->
-            val intent = Intent(applicationContext, DetailMemoActivity::class.java)
+            val intent = Intent(applicationContext, EditMemoActivity::class.java)
             startActivity(intent)
         }
 

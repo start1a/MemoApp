@@ -12,5 +12,7 @@ open class MemoData(
     var content: String = "",
     var summary: String = "",
     var date: Date = Date(),
-    var images: RealmList<String> = RealmList("https://grepp-programmers-challenges.s3.ap-northeast-2.amazonaws.com/2020-flo/cover.jpg")
+    var images: RealmList<String> = RealmList("https://grepp-programmers-challenges.s3.ap-northeast-2.amazonaws.com/2020-flo/cover.jpg",
+        "https://grepp-programmers-challenges.s3.ap-northeast-2.amazonaws.com/2020-flo/cover.jpg",
+        "https://grepp-programmers-challenges.s3.ap-northeast-2.amazonaws.com/2020-flo/cover.jpg")
 ) : RealmObject()

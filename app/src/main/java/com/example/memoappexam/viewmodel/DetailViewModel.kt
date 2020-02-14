@@ -11,7 +11,7 @@ class DetailViewModel: ViewModel() {
 
     val title: MutableLiveData<String> = MutableLiveData<String>().apply { value = "" }
     val content: MutableLiveData<String> = MutableLiveData<String>().apply { value = "" }
-    val image: MutableLiveData<List<String>> = MutableLiveData<List<String>>().apply { value = mutableListOf() }
+    val image: MutableLiveData<MutableList<String>> = MutableLiveData<MutableList<String>>().apply { value = mutableListOf() }
 
     private var memoData = MemoData()
 
@@ -37,5 +37,9 @@ class DetailViewModel: ViewModel() {
 
     fun Update_MemoData(title: String, content: String, images: RealmList<String>) {
         mMemoDao.addUpdateMemo(memoData, title, content, images)
+    }
+
+    fun Delete_MemoData(id: String) {
+        mMemoDao.deleteMemo(id)
     }
 }

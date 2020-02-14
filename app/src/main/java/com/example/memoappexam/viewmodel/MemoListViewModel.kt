@@ -1,13 +1,12 @@
 package com.example.memoappexam.viewmodel
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.memoappexam.data.MemoDao
 import com.example.memoappexam.data.MemoData
 import com.example.memoappexam.data.RealmLiveData
 import io.realm.Realm
 
-class MemoListViewModel: ViewModel() {
+class MemoListViewModel : ViewModel() {
 
     private val mRealm: Realm by lazy {
         Realm.getDefaultInstance()

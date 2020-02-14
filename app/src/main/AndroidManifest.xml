@@ -13,7 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".views.DetailMemoActivity"
+            android:name=".views.EditMemoActivity"
             android:label="@string/title_activity_detail_memo"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity

@@ -5,8 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context=".views.DetailMemoActivity"
-    tools:showIn="@layout/activity_detail_memo">
+    tools:context=".views.EditMemoActivity"
+    tools:showIn="@layout/activity_edit_memo">
 
     <EditText
         android:id="@+id/editTitle"
@@ -25,12 +25,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTitle" />
 
-    <ImageView
-        android:id="@+id/imgMemo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:src="@drawable/ic_launcher_background"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/imageMemoListView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="8dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editContent" />
 
