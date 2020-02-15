@@ -22,7 +22,7 @@ class ImageListAdapter(private val list : RealmList<MemoImageData>)
 
     override fun onBindViewHolder(holder: MemoImageViewHolder, position: Int) {
         Glide.with(holder.containerView)
-            .load(list[position])
+            .load(list[position]?.image)
             .error(Glide.with(holder.containerView).load(R.drawable.ic_launcher_background))
             .into(holder.containerView.imageItem)
     }

@@ -20,7 +20,6 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.example.memoappexam.ImageListAdapter
 import com.example.memoappexam.R
 import com.example.memoappexam.viewmodel.DetailViewModel
-import io.realm.RealmList
 import kotlinx.android.synthetic.main.activity_edit_memo.*
 import kotlinx.android.synthetic.main.content_edit_memo.*
 
@@ -44,6 +43,10 @@ class EditMemoActivity : AppCompatActivity() {
             ViewModelProvider(viewModelStore, ViewModelProvider.AndroidViewModelFactory(it))
                 .get(DetailViewModel::class.java)
         }
+
+        id = intent.getStringExtra("memoId")
+        if (id != null) viewModel!!.Load_MemoData(id?:"")
+
         viewModel!!.let {
             it.image.value?.let {
                 listImageAdapter = ImageListAdapter(it)
@@ -53,14 +56,12 @@ class EditMemoActivity : AppCompatActivity() {
 
             it.title.observe(this, Observer { editTitle.setText(it) })
             it.content.observe(this, Observer { editContent.setText(it) })
-            it.image.observe(this, Observer { listImageAdapter.notifyDataSetChanged()})
+            it.image.observe(this, Observer { listImageAdapter.notifyDataSetChanged() })
         }
 
-        id = intent.getStringExtra("memoId")
-        if (id != null) viewModel!!.Load_MemoData(id?:"")
+        Toast.makeText(this, viewModel!!.image.value?.size.toString(), Toast.LENGTH_LONG).show()
 
         EditMode(false)
-        Toast.makeText(this, listImageAdapter.itemCount.toString(), Toast.LENGTH_LONG).show()
     }
 
     override fun onBackPressed() {
@@ -69,7 +70,7 @@ class EditMemoActivity : AppCompatActivity() {
             viewModel!!.Update_MemoData(
                 editTitle.text.toString(),
                 editContent.text.toString(),
-                RealmList()
+                listImageAdapter.getList()
             )
         }
     }

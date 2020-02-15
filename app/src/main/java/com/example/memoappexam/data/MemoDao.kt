@@ -25,7 +25,7 @@ class MemoDao(private val realm: Realm) {
             memoData.title = title
             memoData.content = content
             memoData.date = Date()
-             memoData.images = images
+            memoData.images = images
 
             if (content.length > 100)
                 memoData.summary = content.substring(0..100)
@@ -48,12 +48,11 @@ class MemoDao(private val realm: Realm) {
     }
 
     fun addImageMemo(memoData: MemoData, image: String) {
-        realm.executeTransactionAsync {
-            val imageData = MemoImageData(image)
-            it.copyToRealm(imageData)
-
-            memoData.images.add(imageData)
+        realm.executeTransaction {
+            val imgData = it.createObject(MemoImageData::class.java).apply {
+                this.image = image
+            }
+            memoData.images.add(imgData)
         }
     }
-
 }

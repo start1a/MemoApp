@@ -5,8 +5,8 @@ import io.realm.RealmChangeListener
 import io.realm.RealmObject
 import io.realm.RealmResults
 
-class RealmLiveData<T: RealmObject> (private val realmResults: RealmResults<T>)
-    : LiveData<RealmResults<T>>() {
+class RealmLiveData<T : RealmObject>(private val realmResults: RealmResults<T>) :
+    LiveData<RealmResults<T>>() {
 
     init {
         value = realmResults
