@@ -4,6 +4,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.memoappexam.data.MemoDao
 import com.example.memoappexam.data.MemoData
+import com.example.memoappexam.data.MemoImageData
 import io.realm.Realm
 import io.realm.RealmList
 
@@ -11,7 +12,7 @@ class DetailViewModel: ViewModel() {
 
     val title: MutableLiveData<String> = MutableLiveData<String>().apply { value = "" }
     val content: MutableLiveData<String> = MutableLiveData<String>().apply { value = "" }
-    val image: MutableLiveData<MutableList<String>> = MutableLiveData<MutableList<String>>().apply { value = mutableListOf() }
+    val image: MutableLiveData<RealmList<MemoImageData>> = MutableLiveData<RealmList<MemoImageData>>().apply { value = RealmList() }
 
     private var memoData = MemoData()
 
@@ -35,11 +36,15 @@ class DetailViewModel: ViewModel() {
         image.value = memoData.images
     }
 
-    fun Update_MemoData(title: String, content: String, images: RealmList<String>) {
+    fun Update_MemoData(title: String, content: String, images: RealmList<MemoImageData>) {
         mMemoDao.addUpdateMemo(memoData, title, content, images)
     }
 
     fun Delete_MemoData(id: String) {
         mMemoDao.deleteMemo(id)
+    }
+
+    fun add_ImageMemoData(image: String) {
+        mMemoDao.addImageMemo(memoData, image)
     }
 }

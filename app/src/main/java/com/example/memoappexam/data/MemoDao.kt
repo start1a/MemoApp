@@ -20,12 +20,12 @@ class MemoDao(private val realm: Realm) {
             .findFirst() as MemoData
     }
 
-    fun addUpdateMemo(memoData: MemoData, title: String, content: String, images: RealmList<String>) {
+    fun addUpdateMemo(memoData: MemoData, title: String, content: String, images: RealmList<MemoImageData>) {
         realm.executeTransaction {
             memoData.title = title
             memoData.content = content
             memoData.date = Date()
-            memoData.images = images
+             memoData.images = images
 
             if (content.length > 100)
                 memoData.summary = content.substring(0..100)
@@ -46,4 +46,14 @@ class MemoDao(private val realm: Realm) {
                 ?.deleteFromRealm()
         }
     }
+
+    fun addImageMemo(memoData: MemoData, image: String) {
+        realm.executeTransactionAsync {
+            val imageData = MemoImageData(image)
+            it.copyToRealm(imageData)
+
+            memoData.images.add(imageData)
+        }
+    }
+
 }

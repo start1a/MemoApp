@@ -9,7 +9,9 @@ class MemoApplication: Application() {
     override fun onCreate() {
         super.onCreate()
         Realm.init(this)
-        val realmConfiguration = RealmConfiguration.Builder().build()
+        val realmConfiguration = RealmConfiguration.Builder()
+            .deleteRealmIfMigrationNeeded()
+            .build()
         Realm.setDefaultConfiguration(realmConfiguration)
 
 

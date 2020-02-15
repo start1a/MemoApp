@@ -1,16 +1,19 @@
 package com.example.memoappexam.views
 
+import android.app.Activity
+import android.content.Context
 import android.content.DialogInterface
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.TextView
+import android.view.inputmethod.InputMethodManager
+import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.get
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
@@ -20,14 +23,17 @@ import com.example.memoappexam.viewmodel.DetailViewModel
 import io.realm.RealmList
 import kotlinx.android.synthetic.main.activity_edit_memo.*
 import kotlinx.android.synthetic.main.content_edit_memo.*
-import java.util.zip.Inflater
 
 class EditMemoActivity : AppCompatActivity() {
 
-    private val id = intent.getStringExtra("memoId")
+    private var id: String? = null
     private var mMenu: Menu? = null
     private var viewModel: DetailViewModel? = null
     private lateinit var listImageAdapter: ImageListAdapter
+
+    private val REQUEST_IMAGE_GALLERY = 0
+    private val REQUEST_IMAGE_CAMERA = 1
+    private val REQUEST_IMAGE_URL = 2
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,19 +53,25 @@ class EditMemoActivity : AppCompatActivity() {
 
             it.title.observe(this, Observer { editTitle.setText(it) })
             it.content.observe(this, Observer { editContent.setText(it) })
-            it.image.observe(this, Observer { listImageAdapter.notifyDataSetChanged() })
+            it.image.observe(this, Observer { listImageAdapter.notifyDataSetChanged()})
         }
 
-        if (id != null) viewModel!!.Load_MemoData(id)
+        id = intent.getStringExtra("memoId")
+        if (id != null) viewModel!!.Load_MemoData(id?:"")
+
+        EditMode(false)
+        Toast.makeText(this, listImageAdapter.itemCount.toString(), Toast.LENGTH_LONG).show()
     }
 
     override fun onBackPressed() {
         super.onBackPressed()
-        viewModel?.Update_MemoData(
-            editTitle.text.toString(),
-            editContent.text.toString(),
-            RealmList("https://grepp-programmers-challenges.s3.ap-northeast-2.amazonaws.com/2020-flo/cover.jpg")
-        )
+        if (editContent.text.count() > 0 || editTitle.text.count() > 0 || viewModel!!.image.value?.size?:0 > 0) {
+            viewModel!!.Update_MemoData(
+                editTitle.text.toString(),
+                editContent.text.toString(),
+                RealmList()
+            )
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -80,23 +92,48 @@ class EditMemoActivity : AppCompatActivity() {
                 return true
             }
 
+            android.R.id.home -> {
+                EditMode(false)
+                return true
+            }
+
             R.id.action_delete -> {
-                val view = LayoutInflater.from(this).inflate(R.layout.dialog_delete_memodata, null)
+                val view = LayoutInflater.from(this).inflate(R.layout.dialog_insert_image, null)
 
                 AlertDialog.Builder(this)
                     .setTitle("메모를 삭제하시겠습니까?")
                     .setView(view)
                     .setNegativeButton("취소", null)
                     .setPositiveButton("확인", DialogInterface.OnClickListener { dialog, i ->
-                        viewModel!!.Delete_MemoData(id)
+                        viewModel!!.Delete_MemoData(id?:"")
                         finish()
                     }).show()
 
                 return true
             }
 
-            android.R.id.home -> {
-                EditMode(false)
+            R.id.action_insert_image -> {
+                val view = LayoutInflater.from(this).inflate(R.layout.dialog_insert_image, null)
+
+                view.findViewById<Button>(R.id.btnGallery).setOnClickListener {
+                    val intent = Intent()
+                    intent.type = "image/*"
+                    intent.action = Intent.ACTION_GET_CONTENT
+                    startActivityForResult(intent, REQUEST_IMAGE_GALLERY)
+                }
+
+                view.findViewById<Button>(R.id.btnCamera).setOnClickListener {
+
+                }
+
+                view.findViewById<Button>(R.id.btnURL).setOnClickListener {
+
+                }
+
+                AlertDialog.Builder(this)
+                    .setView(view)
+                    .setTitle("이미지 추가")
+                    .show()
                 return true
             }
 
@@ -104,13 +141,43 @@ class EditMemoActivity : AppCompatActivity() {
         }
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == REQUEST_IMAGE_GALLERY) {
+            if (resultCode == Activity.RESULT_OK && data != null && data.data != null) {
+                viewModel!!.add_ImageMemoData(data.data.toString())
+            }
+        }
+    }
+
     fun EditMode(on: Boolean) {
+        // 좌측 상단 메뉴
+        supportActionBar?.setDisplayHomeAsUpEnabled(on)
+        // 우측 상단 메뉴
         mMenu?.let {
             it.findItem(R.id.action_edit)?.setVisible(!on)
             it.findItem(R.id.action_delete)?.setVisible(!on)
             it.findItem(R.id.action_insert_image)?.setVisible(on)
         }
-        // 상단 메뉴 뒤로가기
-        supportActionBar?.setDisplayHomeAsUpEnabled(on)
+        // 제목
+        editTitle.let {
+            it.isFocusableInTouchMode = on
+            it.isFocusable = on
+            //it.hideKeyboard(!on)
+        }
+        // 내용
+        editContent.let {
+            it.isFocusableInTouchMode = on
+            it.isFocusable = on
+            it.hideKeyboard(!on)
+        }
+    }
+
+    fun View.hideKeyboard(on: Boolean) {
+        if (on) {
+            val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(windowToken, 0)
+        }
     }
 }

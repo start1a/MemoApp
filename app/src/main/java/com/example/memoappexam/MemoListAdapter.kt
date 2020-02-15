@@ -33,7 +33,7 @@ class MemoListAdapter(private val list: MutableList<MemoData>) :
         // 이미지 로딩 실패 시 ic_launcher_backgound 출력
         Glide.with(holder.containerView)
             .load(list[position].images[0])
-            .error(Glide.with(holder.containerView.imageMemo.context).load(R.drawable.ic_launcher_background))
+            .error(Glide.with(holder.containerView).load(R.drawable.ic_launcher_background))
             .into(holder.containerView.imageMemo)
 
         // 텍스트
