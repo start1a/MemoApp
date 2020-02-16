@@ -44,7 +44,8 @@ class DetailViewModel: ViewModel() {
         mMemoDao.deleteMemo(id)
     }
 
-    fun add_ImageMemoData(image: String) {
-        mMemoDao.addImageMemo(memoData, image)
+    fun add_ImageMemoData(imageStr: String) {
+        mMemoDao.addImageMemo(memoData, imageStr)
+        image.value = memoData.images
     }
 }

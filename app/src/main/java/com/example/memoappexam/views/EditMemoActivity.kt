@@ -20,6 +20,8 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.example.memoappexam.ImageListAdapter
 import com.example.memoappexam.R
 import com.example.memoappexam.viewmodel.DetailViewModel
+import io.realm.Realm
+import io.realm.RealmList
 import kotlinx.android.synthetic.main.activity_edit_memo.*
 import kotlinx.android.synthetic.main.content_edit_memo.*
 
@@ -28,7 +30,6 @@ class EditMemoActivity : AppCompatActivity() {
     private var id: String? = null
     private var mMenu: Menu? = null
     private var viewModel: DetailViewModel? = null
-    private lateinit var listImageAdapter: ImageListAdapter
 
     private val REQUEST_IMAGE_GALLERY = 0
     private val REQUEST_IMAGE_CAMERA = 1
@@ -39,28 +40,25 @@ class EditMemoActivity : AppCompatActivity() {
         setContentView(R.layout.activity_edit_memo)
         setSupportActionBar(toolbar)
 
+        // 뷰 모델 생성
         viewModel = application!!.let {
             ViewModelProvider(viewModelStore, ViewModelProvider.AndroidViewModelFactory(it))
                 .get(DetailViewModel::class.java)
         }
-
-        id = intent.getStringExtra("memoId")
-        if (id != null) viewModel!!.Load_MemoData(id?:"")
-
         viewModel!!.let {
-            it.image.value?.let {
-                listImageAdapter = ImageListAdapter(it)
-                imageMemoListView.adapter = listImageAdapter
-                imageMemoListView.layoutManager = GridLayoutManager(this, 3)
-            }
-
             it.title.observe(this, Observer { editTitle.setText(it) })
             it.content.observe(this, Observer { editContent.setText(it) })
-            it.image.observe(this, Observer { listImageAdapter.notifyDataSetChanged() })
         }
 
-        Toast.makeText(this, viewModel!!.image.value?.size.toString(), Toast.LENGTH_LONG).show()
+        // 이미지 리스트
+        val fragmentTransaction = supportFragmentManager.beginTransaction()
+        fragmentTransaction.replace(R.id.fragmentImageList, MemoImageListFragment())
+        fragmentTransaction.commit()
 
+        // 기존 데이터 로드
+        id = intent.getStringExtra("memoId")
+        if (id != null) viewModel!!.Load_MemoData(id?:"")
+        // 상세 보기 모드
         EditMode(false)
     }
 
@@ -70,7 +68,7 @@ class EditMemoActivity : AppCompatActivity() {
             viewModel!!.Update_MemoData(
                 editTitle.text.toString(),
                 editContent.text.toString(),
-                listImageAdapter.getList()
+                viewModel!!.image.value?: RealmList()
             )
         }
     }

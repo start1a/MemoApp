@@ -32,4 +32,8 @@ class MemoListActivity : AppCompatActivity() {
                 .get(MemoListViewModel::class.java)
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+    }
 }
