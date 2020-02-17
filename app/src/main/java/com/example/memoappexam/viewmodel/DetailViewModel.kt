@@ -15,6 +15,7 @@ class DetailViewModel: ViewModel() {
     val image: MutableLiveData<RealmList<MemoImageData>> = MutableLiveData<RealmList<MemoImageData>>().apply { value = RealmList() }
 
     private var memoData = MemoData()
+    var memoId: String? = null
 
     private val mRealm: Realm by lazy {
         Realm.getDefaultInstance()
@@ -31,6 +32,7 @@ class DetailViewModel: ViewModel() {
 
     fun Load_MemoData(id: String) {
         memoData = mMemoDao.selectMemo(id)
+        memoId = id
         title.value = memoData.title
         content.value = memoData.content
         image.value = memoData.images

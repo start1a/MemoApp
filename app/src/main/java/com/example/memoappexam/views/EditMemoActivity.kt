@@ -11,25 +11,24 @@ import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Observer
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.GridLayoutManager
-import com.example.memoappexam.ImageListAdapter
 import com.example.memoappexam.R
 import com.example.memoappexam.viewmodel.DetailViewModel
-import io.realm.Realm
 import io.realm.RealmList
 import kotlinx.android.synthetic.main.activity_edit_memo.*
-import kotlinx.android.synthetic.main.content_edit_memo.*
+import kotlinx.android.synthetic.main.fragment_memo_text.*
 
 class EditMemoActivity : AppCompatActivity() {
 
-    private var id: String? = null
     private var mMenu: Menu? = null
     private var viewModel: DetailViewModel? = null
+
+    private val fragmentManager = supportFragmentManager
+    private lateinit var fragText: MemoTextFragment
+    private lateinit var fragImage: MemoImageFragment
 
     private val REQUEST_IMAGE_GALLERY = 0
     private val REQUEST_IMAGE_CAMERA = 1
@@ -39,27 +38,26 @@ class EditMemoActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_memo)
         setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
 
         // 뷰 모델 생성
         viewModel = application!!.let {
             ViewModelProvider(viewModelStore, ViewModelProvider.AndroidViewModelFactory(it))
                 .get(DetailViewModel::class.java)
         }
-        viewModel!!.let {
-            it.title.observe(this, Observer { editTitle.setText(it) })
-            it.content.observe(this, Observer { editContent.setText(it) })
-        }
 
-        // 이미지 리스트
-        val fragmentTransaction = supportFragmentManager.beginTransaction()
-        fragmentTransaction.replace(R.id.fragmentImageList, MemoImageListFragment())
-        fragmentTransaction.commit()
+        // 메모 텍스트 프래그먼트 생성
+        fragText = MemoTextFragment()
+        fragmentManager.beginTransaction().replace(R.id.memoDetailLayout, fragText).commit()
 
         // 기존 데이터 로드
-        id = intent.getStringExtra("memoId")
-        if (id != null) viewModel!!.Load_MemoData(id?:"")
+        viewModel!!.let {
+            val id = intent.getStringExtra("memoId")
+            if (id != null) it.Load_MemoData(id)
+        }
+
         // 상세 보기 모드
-        EditMode(false)
+        //EditMode(false)
     }
 
     override fun onBackPressed() {
@@ -78,8 +76,6 @@ class EditMemoActivity : AppCompatActivity() {
         val menuInflater = menuInflater
         menuInflater.inflate(R.menu.menu_detail_memo, menu)
         mMenu = menu
-        // 처음은 수정 삭제 모드
-        mMenu?.findItem(R.id.action_insert_image)?.setVisible(false)
         return true
     }
 
@@ -104,7 +100,8 @@ class EditMemoActivity : AppCompatActivity() {
                     .setView(view)
                     .setNegativeButton("취소", null)
                     .setPositiveButton("확인", DialogInterface.OnClickListener { dialog, i ->
-                        viewModel!!.Delete_MemoData(id?:"")
+                        val id = viewModel!!.memoId
+                        if (id != null) viewModel!!.Delete_MemoData(id)
                         finish()
                     }).show()
 
@@ -143,9 +140,19 @@ class EditMemoActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == REQUEST_IMAGE_GALLERY) {
-            if (resultCode == Activity.RESULT_OK && data != null && data.data != null) {
-                viewModel!!.add_ImageMemoData(data.data.toString())
+        when (requestCode) {
+            REQUEST_IMAGE_GALLERY -> {
+                if (resultCode == Activity.RESULT_OK && data != null && data.data != null) {
+                    viewModel!!.add_ImageMemoData(data.data.toString())
+                }
+            }
+
+            REQUEST_IMAGE_CAMERA -> {
+
+            }
+
+            REQUEST_IMAGE_URL -> {
+
             }
         }
     }
@@ -160,13 +167,13 @@ class EditMemoActivity : AppCompatActivity() {
             it.findItem(R.id.action_insert_image)?.setVisible(on)
         }
         // 제목
-        editTitle.let {
+        fragText.editTitle.let {
             it.isFocusableInTouchMode = on
             it.isFocusable = on
             //it.hideKeyboard(!on)
         }
         // 내용
-        editContent.let {
+        fragText.editContent.let {
             it.isFocusableInTouchMode = on
             it.isFocusable = on
             it.hideKeyboard(!on)
@@ -177,6 +184,30 @@ class EditMemoActivity : AppCompatActivity() {
         if (on) {
             val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.hideSoftInputFromWindow(windowToken, 0)
+        }
+    }
+
+    fun onClick(view: View) {
+        when(view.id) {
+            // 텍스트
+            R.id.btnFragText -> {
+                if (fragText == null) {
+                    fragText = MemoTextFragment()
+                    fragmentManager.beginTransaction().add(R.id.memoDetailLayout, fragText).commit()
+                }
+                if (fragText != null) fragmentManager.beginTransaction().show(fragText).commit()
+                if (fragImage != null) fragmentManager.beginTransaction().hide(fragText).commit()
+            }
+
+            // 이미지
+            R.id.btnFragImage -> {
+                if (fragImage == null) {
+                    fragImage = MemoImageFragment()
+                    fragmentManager.beginTransaction().add(R.id.memoDetailLayout, fragImage).commit()
+                }
+                if (fragText != null) fragmentManager.beginTransaction().hide(fragText).commit()
+                if (fragImage != null) fragmentManager.beginTransaction().show(fragText).commit()
+            }
         }
     }
 }

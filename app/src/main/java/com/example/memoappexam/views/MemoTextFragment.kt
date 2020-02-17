@@ -8,20 +8,16 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.GridLayoutManager
-import com.example.memoappexam.ImageListAdapter
 
 import com.example.memoappexam.R
 import com.example.memoappexam.viewmodel.DetailViewModel
-import kotlinx.android.synthetic.main.content_edit_memo.*
-import kotlinx.android.synthetic.main.fragment_memo_image_list.*
+import kotlinx.android.synthetic.main.fragment_memo_text.*
 
 /**
  * A simple [Fragment] subclass.
  */
-class MemoImageListFragment : Fragment() {
+class MemoTextFragment : Fragment() {
 
-    private lateinit var listImageAdapter: ImageListAdapter
     private var viewModel: DetailViewModel? = null
 
     override fun onCreateView(
@@ -29,7 +25,7 @@ class MemoImageListFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_memo_image_list, container, false)
+        return inflater.inflate(R.layout.fragment_memo_text, container, false)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -44,13 +40,8 @@ class MemoImageListFragment : Fragment() {
         }
 
         viewModel!!.let {
-            it.image.value?.let {
-                listImageAdapter = ImageListAdapter(it)
-                imgListView.adapter = listImageAdapter
-                imgListView.layoutManager = GridLayoutManager(activity, 3)
-            }
-            it.image.observe(this, Observer { listImageAdapter.notifyDataSetChanged() })
+            it.title.observe(this, Observer { editTitle.setText(it) })
+            it.content.observe(this, Observer { editContent.setText(it) })
         }
     }
-
 }

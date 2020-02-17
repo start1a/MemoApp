@@ -17,6 +17,7 @@ class MemoListActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_memo_list)
         setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
 
         fab.setOnClickListener { view ->
             val intent = Intent(applicationContext, EditMemoActivity::class.java)
