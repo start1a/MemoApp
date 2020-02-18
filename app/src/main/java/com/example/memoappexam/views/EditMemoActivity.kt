@@ -1,34 +1,59 @@
 package com.example.memoappexam.views
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.os.PersistableBundle
+import android.provider.MediaStore
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModelProvider
 import com.example.memoappexam.R
 import com.example.memoappexam.viewmodel.DetailViewModel
 import io.realm.RealmList
 import kotlinx.android.synthetic.main.activity_edit_memo.*
 import kotlinx.android.synthetic.main.fragment_memo_text.*
+import java.io.File
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.*
 
 class EditMemoActivity : AppCompatActivity() {
 
     private var mMenu: Menu? = null
     private var viewModel: DetailViewModel? = null
+    private lateinit var currentPhotoPath: String
+    private lateinit var photoURI: Uri
 
     private val fragmentManager = supportFragmentManager
-    private lateinit var fragText: MemoTextFragment
-    private lateinit var fragImage: MemoImageFragment
+    private val fragText: MemoTextFragment by lazy {
+        val fragment = MemoTextFragment()
+        fragmentManager.beginTransaction().add(R.id.memoDetailLayout, fragment).commit()
+        fragment
+    }
+    private val fragImage: MemoImageFragment by lazy {
+        val fragment = MemoImageFragment()
+        fragmentManager.beginTransaction().add(R.id.memoDetailLayout, fragment).commit()
+        fragment
+    }
 
     private val REQUEST_IMAGE_GALLERY = 0
     private val REQUEST_IMAGE_CAMERA = 1
@@ -39,7 +64,6 @@ class EditMemoActivity : AppCompatActivity() {
         setContentView(R.layout.activity_edit_memo)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
-
         // 뷰 모델 생성
         viewModel = application!!.let {
             ViewModelProvider(viewModelStore, ViewModelProvider.AndroidViewModelFactory(it))
@@ -47,38 +71,39 @@ class EditMemoActivity : AppCompatActivity() {
         }
 
         // 메모 텍스트 프래그먼트 생성
-        fragText = MemoTextFragment()
         fragmentManager.beginTransaction().replace(R.id.memoDetailLayout, fragText).commit()
-
         // 기존 데이터 로드
         viewModel!!.let {
             val id = intent.getStringExtra("memoId")
             if (id != null) it.Load_MemoData(id)
         }
+    }
 
-        // 상세 보기 모드
-        //EditMode(false)
+    override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
+        super.onSaveInstanceState(outState, outPersistentState)
     }
 
     override fun onBackPressed() {
         super.onBackPressed()
-        if (editContent.text.count() > 0 || editTitle.text.count() > 0 || viewModel!!.image.value?.size?:0 > 0) {
+        if (editContent.text.count() > 0 || editTitle.text.count() > 0 || viewModel!!.image.value?.size ?: 0 > 0) {
             viewModel!!.Update_MemoData(
                 editTitle.text.toString(),
                 editContent.text.toString(),
-                viewModel!!.image.value?: RealmList()
+                viewModel!!.image.value ?: RealmList()
             )
         }
     }
 
+    // 최초 메뉴 키가 눌렸을 시 호출
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         // return super.onCreateOptionsMenu(menu)
-        val menuInflater = menuInflater
         menuInflater.inflate(R.menu.menu_detail_memo, menu)
         mMenu = menu
+        EditMode(false)
         return true
     }
 
+    // 메뉴 버튼이 눌림
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
         when (item.itemId) {
@@ -93,11 +118,8 @@ class EditMemoActivity : AppCompatActivity() {
             }
 
             R.id.action_delete -> {
-                val view = LayoutInflater.from(this).inflate(R.layout.dialog_insert_image, null)
-
                 AlertDialog.Builder(this)
                     .setTitle("메모를 삭제하시겠습니까?")
-                    .setView(view)
                     .setNegativeButton("취소", null)
                     .setPositiveButton("확인", DialogInterface.OnClickListener { dialog, i ->
                         val id = viewModel!!.memoId
@@ -119,15 +141,43 @@ class EditMemoActivity : AppCompatActivity() {
                 }
 
                 view.findViewById<Button>(R.id.btnCamera).setOnClickListener {
+                    val permissioncheck =
+                        ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
 
+                    if (permissioncheck == PackageManager.PERMISSION_DENIED) {
+                        val requiredPermissions = arrayOf(
+                            Manifest.permission.CAMERA,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        )
+                        ActivityCompat.requestPermissions(this, requiredPermissions, 1)
+
+                    } else {
+                        Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
+                            takePictureIntent.resolveActivity(packageManager)?.also {
+                                val photoFile: File? = try {
+                                    createImageFile()
+                                } catch (ex: IOException) {
+                                    null
+                                }
+                                photoFile?.also {
+                                    photoURI = FileProvider.getUriForFile(
+                                        this,
+                                        "com.example.memoappexam",
+                                        it
+                                    )
+                                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
+                                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAMERA)
+                                }
+                            }
+                        }
+                    }
                 }
 
                 view.findViewById<Button>(R.id.btnURL).setOnClickListener {
 
                 }
 
-                AlertDialog.Builder(this)
-                    .setView(view)
+                AlertDialog.Builder(this).setView(view)
                     .setTitle("이미지 추가")
                     .show()
                 return true
@@ -148,7 +198,9 @@ class EditMemoActivity : AppCompatActivity() {
             }
 
             REQUEST_IMAGE_CAMERA -> {
-
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    viewModel!!.add_ImageMemoData(photoURI.toString())
+                }
             }
 
             REQUEST_IMAGE_URL -> {
@@ -167,13 +219,13 @@ class EditMemoActivity : AppCompatActivity() {
             it.findItem(R.id.action_insert_image)?.setVisible(on)
         }
         // 제목
-        fragText.editTitle.let {
+        editTitle?.let {
             it.isFocusableInTouchMode = on
             it.isFocusable = on
-            //it.hideKeyboard(!on)
+            it.hideKeyboard(!on)
         }
         // 내용
-        fragText.editContent.let {
+        editContent?.let {
             it.isFocusableInTouchMode = on
             it.isFocusable = on
             it.hideKeyboard(!on)
@@ -188,26 +240,33 @@ class EditMemoActivity : AppCompatActivity() {
     }
 
     fun onClick(view: View) {
-        when(view.id) {
+        when (view.id) {
             // 텍스트
             R.id.btnFragText -> {
-                if (fragText == null) {
-                    fragText = MemoTextFragment()
-                    fragmentManager.beginTransaction().add(R.id.memoDetailLayout, fragText).commit()
-                }
-                if (fragText != null) fragmentManager.beginTransaction().show(fragText).commit()
-                if (fragImage != null) fragmentManager.beginTransaction().hide(fragText).commit()
+                fragmentManager.beginTransaction().hide(fragImage).commit()
+                fragmentManager.beginTransaction().show(fragText).commit()
             }
 
             // 이미지
             R.id.btnFragImage -> {
-                if (fragImage == null) {
-                    fragImage = MemoImageFragment()
-                    fragmentManager.beginTransaction().add(R.id.memoDetailLayout, fragImage).commit()
-                }
-                if (fragText != null) fragmentManager.beginTransaction().hide(fragText).commit()
-                if (fragImage != null) fragmentManager.beginTransaction().show(fragText).commit()
+                fragmentManager.beginTransaction().hide(fragText).commit()
+                fragmentManager.beginTransaction().show(fragImage).commit()
             }
+        }
+    }
+
+    @Throws(IOException::class)
+    private fun createImageFile(): File {
+        // Create an image file name
+        val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+        val storageDir: File = getExternalFilesDir(Environment.DIRECTORY_PICTURES)!!
+        return File.createTempFile(
+            "JPEG_${timeStamp}_", /* prefix */
+            ".jpg", /* suffix */
+            storageDir /* directory */
+        ).apply {
+            // Save a file: path for use with ACTION_VIEW intents
+            currentPhotoPath = absolutePath
         }
     }
 }
