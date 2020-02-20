@@ -44,4 +44,9 @@ class MemoTextFragment : Fragment() {
             it.content.observe(this, Observer { editContent.setText(it) })
         }
     }
+
+    override fun onPause() {
+        super.onPause()
+        viewModel!!.saveLiveData(editTitle.text.toString(), editContent.text.toString())
+    }
 }

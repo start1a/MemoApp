@@ -2,19 +2,17 @@ package com.example.memoappexam.views
 
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.memoappexam.ImageListAdapter
-
 import com.example.memoappexam.R
 import com.example.memoappexam.viewmodel.DetailViewModel
-import kotlinx.android.synthetic.main.content_edit_memo.*
 import kotlinx.android.synthetic.main.fragment_memo_image_list.*
 
 /**
@@ -46,11 +44,12 @@ class MemoImageFragment : Fragment() {
         viewModel!!.let {
             it.image.value?.let {
                 listImageAdapter = ImageListAdapter(it)
-                imgListView.adapter = listImageAdapter
                 imgListView.layoutManager = GridLayoutManager(activity, 3)
+                imgListView.adapter = listImageAdapter
             }
-            it.image.observe(this, Observer { listImageAdapter.notifyDataSetChanged() })
+            it.image.observe(this, Observer {
+                listImageAdapter.notifyDataSetChanged()
+            })
         }
     }
-
 }

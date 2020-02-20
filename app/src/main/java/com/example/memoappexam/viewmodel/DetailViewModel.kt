@@ -1,21 +1,30 @@
 package com.example.memoappexam.viewmodel
 
+import android.view.View
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.memoappexam.R
 import com.example.memoappexam.data.MemoDao
 import com.example.memoappexam.data.MemoData
 import com.example.memoappexam.data.MemoImageData
+import com.example.memoappexam.data.RealmListLiveData
+import com.example.memoappexam.views.MemoTextFragment
 import io.realm.Realm
+import io.realm.RealmChangeListener
 import io.realm.RealmList
+import kotlinx.android.synthetic.main.activity_edit_memo.view.*
 
-class DetailViewModel: ViewModel() {
+class DetailViewModel : ViewModel() {
 
     val title: MutableLiveData<String> = MutableLiveData<String>().apply { value = "" }
     val content: MutableLiveData<String> = MutableLiveData<String>().apply { value = "" }
-    val image: MutableLiveData<RealmList<MemoImageData>> = MutableLiveData<RealmList<MemoImageData>>().apply { value = RealmList() }
-
-    private var memoData = MemoData()
+    val image: RealmListLiveData<MemoImageData> by lazy {
+        RealmListLiveData<MemoImageData>(memoData.images)
+    }
     var memoId: String? = null
+    private var memoData = MemoData()
+    var fragBtnClicked: Int = R.id.btnFragText
 
     private val mRealm: Realm by lazy {
         Realm.getDefaultInstance()
@@ -30,16 +39,21 @@ class DetailViewModel: ViewModel() {
         mRealm.close()
     }
 
+    fun saveLiveData(editTitle: String, editContent: String) {
+        title.value = editTitle
+        content.value = editContent
+    }
+
     fun Load_MemoData(id: String) {
         memoData = mMemoDao.selectMemo(id)
         memoId = id
         title.value = memoData.title
         content.value = memoData.content
-        image.value = memoData.images
     }
 
-    fun Update_MemoData(title: String, content: String, images: RealmList<MemoImageData>) {
-        mMemoDao.addUpdateMemo(memoData, title, content, images)
+    fun Update_MemoData(title: String, content: String) {
+        mMemoDao.addUpdateMemo(memoData, title, content, image.value ?: RealmList()
+        )
     }
 
     fun Delete_MemoData(id: String) {
@@ -47,7 +61,6 @@ class DetailViewModel: ViewModel() {
     }
 
     fun add_ImageMemoData(imageStr: String) {
-        mMemoDao.addImageMemo(memoData, imageStr)
-        image.value = memoData.images
+        image.add(MemoImageData(imageStr))
     }
 }

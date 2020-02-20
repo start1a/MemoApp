@@ -8,7 +8,7 @@ import com.example.memoappexam.data.MemoImageData
 import io.realm.RealmList
 import kotlinx.android.synthetic.main.item_image_memo.view.*
 
-class ImageListAdapter(private val list : RealmList<MemoImageData>)
+class ImageListAdapter(private val list : MutableList<MemoImageData>)
     : RecyclerView.Adapter<MemoImageViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MemoImageViewHolder {
@@ -25,9 +25,5 @@ class ImageListAdapter(private val list : RealmList<MemoImageData>)
             .load(list[position]?.image)
             .error(Glide.with(holder.containerView).load(R.drawable.ic_launcher_background))
             .into(holder.containerView.imageItem)
-    }
-
-    fun getList(): RealmList<MemoImageData> {
-        return list
     }
 }

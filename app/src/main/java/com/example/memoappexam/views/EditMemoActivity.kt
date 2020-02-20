@@ -7,12 +7,10 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.os.PersistableBundle
+import android.os.MemoryFile
 import android.provider.MediaStore
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -28,7 +26,6 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModelProvider
 import com.example.memoappexam.R
 import com.example.memoappexam.viewmodel.DetailViewModel
-import io.realm.RealmList
 import kotlinx.android.synthetic.main.activity_edit_memo.*
 import kotlinx.android.synthetic.main.fragment_memo_text.*
 import java.io.File
@@ -40,21 +37,19 @@ class EditMemoActivity : AppCompatActivity() {
 
     private var mMenu: Menu? = null
     private var viewModel: DetailViewModel? = null
-    private lateinit var currentPhotoPath: String
-    private lateinit var photoURI: Uri
 
+    // 프래그먼트
     private val fragmentManager = supportFragmentManager
     private val fragText: MemoTextFragment by lazy {
-        val fragment = MemoTextFragment()
-        fragmentManager.beginTransaction().add(R.id.memoDetailLayout, fragment).commit()
-        fragment
+        MemoTextFragment()
     }
     private val fragImage: MemoImageFragment by lazy {
-        val fragment = MemoImageFragment()
-        fragmentManager.beginTransaction().add(R.id.memoDetailLayout, fragment).commit()
-        fragment
+        MemoImageFragment()
     }
 
+    // 이미지 처리 데이터
+    private lateinit var currentPhotoPath: String
+    private lateinit var photoURI: Uri
     private val REQUEST_IMAGE_GALLERY = 0
     private val REQUEST_IMAGE_CAMERA = 1
     private val REQUEST_IMAGE_URL = 2
@@ -64,42 +59,41 @@ class EditMemoActivity : AppCompatActivity() {
         setContentView(R.layout.activity_edit_memo)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
-        // 뷰 모델 생성
+
         viewModel = application!!.let {
             ViewModelProvider(viewModelStore, ViewModelProvider.AndroidViewModelFactory(it))
                 .get(DetailViewModel::class.java)
         }
 
-        // 메모 텍스트 프래그먼트 생성
-        fragmentManager.beginTransaction().replace(R.id.memoDetailLayout, fragText).commit()
+        // 프래그먼트 생성
+        setFragment_LastShowed(viewModel!!.fragBtnClicked)
         // 기존 데이터 로드
         viewModel!!.let {
             val id = intent.getStringExtra("memoId")
             if (id != null) it.Load_MemoData(id)
         }
-    }
 
-    override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
-        super.onSaveInstanceState(outState, outPersistentState)
+        // Toast.makeText(this, viewModel!!.image.value?.size.toString(), Toast.LENGTH_SHORT).show()
     }
 
     override fun onBackPressed() {
         super.onBackPressed()
-        if (editContent.text.count() > 0 || editTitle.text.count() > 0 || viewModel!!.image.value?.size ?: 0 > 0) {
-            viewModel!!.Update_MemoData(
-                editTitle.text.toString(),
-                editContent.text.toString(),
-                viewModel!!.image.value ?: RealmList()
-            )
-        }
+
+        val title = editTitle.text.toString()
+        val content = editContent.text.toString()
+        if (title.count() > 0 || content.count() > 0 || viewModel!!.image.value?.size ?: 0 > 0)
+            viewModel!!.Update_MemoData(title, content)
     }
 
-    // 최초 메뉴 키가 눌렸을 시 호출
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         // return super.onCreateOptionsMenu(menu)
         menuInflater.inflate(R.menu.menu_detail_memo, menu)
         mMenu = menu
-        EditMode(false)
+
+        // 새 메모일 경우 자동 수정 모드
+        if (viewModel!!.memoId != null) EditMode(false)
+        else EditMode(true)
+
         return true
     }
 
@@ -209,6 +203,7 @@ class EditMemoActivity : AppCompatActivity() {
         }
     }
 
+    // 상단 메뉴 전환
     fun EditMode(on: Boolean) {
         // 좌측 상단 메뉴
         supportActionBar?.setDisplayHomeAsUpEnabled(on)
@@ -222,24 +217,29 @@ class EditMemoActivity : AppCompatActivity() {
         editTitle?.let {
             it.isFocusableInTouchMode = on
             it.isFocusable = on
-            it.hideKeyboard(!on)
+            it.showKeyboard(on)
         }
         // 내용
         editContent?.let {
             it.isFocusableInTouchMode = on
             it.isFocusable = on
-            it.hideKeyboard(!on)
+            it.showKeyboard(on)
         }
     }
 
-    fun View.hideKeyboard(on: Boolean) {
-        if (on) {
-            val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.hideSoftInputFromWindow(windowToken, 0)
-        }
+    fun View.showKeyboard(on: Boolean) {
+        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+
+        if (on) imm.toggleSoftInput(
+            InputMethodManager.SHOW_FORCED,
+            InputMethodManager.HIDE_IMPLICIT_ONLY
+        )
+        else imm.hideSoftInputFromWindow(windowToken, 0)
     }
 
+    // 하단 메뉴 프래그먼트 전환
     fun onClick(view: View) {
+        viewModel!!.fragBtnClicked = view.id
         when (view.id) {
             // 텍스트
             R.id.btnFragText -> {
@@ -252,6 +252,14 @@ class EditMemoActivity : AppCompatActivity() {
                 fragmentManager.beginTransaction().hide(fragText).commit()
                 fragmentManager.beginTransaction().show(fragImage).commit()
             }
+        }
+    }
+
+    fun setFragment_LastShowed(btnType: Int) {
+        when (btnType) {
+            R.id.btnFragText -> fragmentManager.beginTransaction().show(fragText).commit()
+            R.id.btnFragImage -> fragmentManager.beginTransaction().show(fragImage).commit()
+
         }
     }
 

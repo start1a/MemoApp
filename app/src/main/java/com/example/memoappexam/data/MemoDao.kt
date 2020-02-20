@@ -15,9 +15,10 @@ class MemoDao(private val realm: Realm) {
     }
 
     fun selectMemo(id: String): MemoData {
-        return realm.where(MemoData::class.java)
+        val data = realm.where(MemoData::class.java)
             .equalTo("id", id)
             .findFirst() as MemoData
+        return realm.copyFromRealm(data)
     }
 
     fun addUpdateMemo(memoData: MemoData, title: String, content: String, images: RealmList<MemoImageData>) {
@@ -33,7 +34,7 @@ class MemoDao(private val realm: Realm) {
                 memoData.summary = content
 
             if (!memoData.isManaged) {
-                it.copyToRealm(memoData)
+                it.copyToRealmOrUpdate(memoData)
             }
         }
     }
@@ -44,15 +45,6 @@ class MemoDao(private val realm: Realm) {
                 .equalTo("id", id)
                 .findFirst()
                 ?.deleteFromRealm()
-        }
-    }
-
-    fun addImageMemo(memoData: MemoData, image: String) {
-        realm.executeTransaction {
-            val imgData = it.createObject(MemoImageData::class.java).apply {
-                this.image = image
-            }
-            memoData.images.add(imgData)
         }
     }
 }
