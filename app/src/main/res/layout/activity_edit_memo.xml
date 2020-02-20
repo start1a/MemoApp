@@ -36,8 +36,7 @@
             android:layout_weight="1"
             android:background="#ffffff"
             android:scaleType="fitCenter"
-            android:src="@drawable/ic_mode_edit_black_24dp"
-            android:onClick="onClick"/>
+            android:src="@drawable/ic_mode_edit_black_24dp"/>
 
         <ImageButton
             android:id="@+id/btnFragImage"
@@ -46,8 +45,7 @@
             android:layout_weight="1"
             android:background="#ffffff"
             android:scaleType="fitCenter"
-            android:src="@drawable/ic_insert_photo_black_24dp"
-            android:onClick="onClick"/>
+            android:src="@drawable/ic_insert_photo_black_24dp"/>
 
     </LinearLayout>
 

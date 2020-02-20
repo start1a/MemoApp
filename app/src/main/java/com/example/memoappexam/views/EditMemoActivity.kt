@@ -9,7 +9,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
-import android.os.MemoryFile
 import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.Menu
@@ -17,7 +16,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -60,31 +58,37 @@ class EditMemoActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
 
-        viewModel = application!!.let {
-            ViewModelProvider(viewModelStore, ViewModelProvider.AndroidViewModelFactory(it))
-                .get(DetailViewModel::class.java)
+        if (viewModel == null) {
+            viewModel = application!!.let {
+                ViewModelProvider(viewModelStore, ViewModelProvider.AndroidViewModelFactory(it))
+                    .get(DetailViewModel::class.java)
+            }
         }
 
-        // 프래그먼트 생성
-        setFragment_LastShowed(viewModel!!.fragBtnClicked)
-        // 기존 데이터 로드
         viewModel!!.let {
+            // 프래그먼트 생성
+            setFragment(it.fragBtnClicked)
+            // 메모 데이터 로드
             val id = intent.getStringExtra("memoId")
-            if (id != null) it.Load_MemoData(id)
+            if (id != null && it.memoId == null) it.Load_MemoData(id)
         }
 
-        // Toast.makeText(this, viewModel!!.image.value?.size.toString(), Toast.LENGTH_SHORT).show()
+        btnFragText.setOnClickListener {
+            setFragment(it.id)
+            viewModel!!.fragBtnClicked = it.id
+        }
+        btnFragImage.setOnClickListener {
+            setFragment(it.id)
+            viewModel!!.fragBtnClicked = it.id
+        }
     }
 
     override fun onBackPressed() {
         super.onBackPressed()
-
-        val title = editTitle.text.toString()
-        val content = editContent.text.toString()
-        if (title.count() > 0 || content.count() > 0 || viewModel!!.image.value?.size ?: 0 > 0)
-            viewModel!!.Update_MemoData(title, content)
+        viewModel!!.Update_MemoData()
     }
 
+    // 최초 메모
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         // return super.onCreateOptionsMenu(menu)
         menuInflater.inflate(R.menu.menu_detail_memo, menu)
@@ -101,6 +105,7 @@ class EditMemoActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
         when (item.itemId) {
+
             R.id.action_edit -> {
                 EditMode(true)
                 return true
@@ -237,29 +242,16 @@ class EditMemoActivity : AppCompatActivity() {
         else imm.hideSoftInputFromWindow(windowToken, 0)
     }
 
-    // 하단 메뉴 프래그먼트 전환
-    fun onClick(view: View) {
-        viewModel!!.fragBtnClicked = view.id
-        when (view.id) {
-            // 텍스트
-            R.id.btnFragText -> {
-                fragmentManager.beginTransaction().hide(fragImage).commit()
-                fragmentManager.beginTransaction().show(fragText).commit()
-            }
-
-            // 이미지
-            R.id.btnFragImage -> {
-                fragmentManager.beginTransaction().hide(fragText).commit()
-                fragmentManager.beginTransaction().show(fragImage).commit()
-            }
-        }
-    }
-
-    fun setFragment_LastShowed(btnType: Int) {
-        when (btnType) {
-            R.id.btnFragText -> fragmentManager.beginTransaction().show(fragText).commit()
-            R.id.btnFragImage -> fragmentManager.beginTransaction().show(fragImage).commit()
-
+    fun setFragment(type: Int) {
+        when (type) {
+            R.id.btnFragText -> fragmentManager.beginTransaction().replace(
+                R.id.memoDetailLayout,
+                fragText
+            ).commit()
+            R.id.btnFragImage -> fragmentManager.beginTransaction().replace(
+                R.id.memoDetailLayout,
+                fragImage
+            ).commit()
         }
     }
 
@@ -276,5 +268,6 @@ class EditMemoActivity : AppCompatActivity() {
             // Save a file: path for use with ACTION_VIEW intents
             currentPhotoPath = absolutePath
         }
+
     }
 }

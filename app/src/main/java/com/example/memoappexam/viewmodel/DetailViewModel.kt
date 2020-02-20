@@ -51,9 +51,11 @@ class DetailViewModel : ViewModel() {
         content.value = memoData.content
     }
 
-    fun Update_MemoData(title: String, content: String) {
-        mMemoDao.addUpdateMemo(memoData, title, content, image.value ?: RealmList()
-        )
+    fun Update_MemoData() {
+        if (title.value?.count() ?: 0 > 0 || content.value?.count() ?: 0 > 0 || image.value?.size ?: 0 > 0)
+            mMemoDao.addUpdateMemo(
+                memoData, title.value ?: "", content.value ?: "", image.value ?: RealmList()
+            )
     }
 
     fun Delete_MemoData(id: String) {

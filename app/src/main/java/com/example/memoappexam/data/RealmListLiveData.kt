@@ -17,7 +17,8 @@ class RealmListLiveData<T: RealmObject> (private val realmList: RealmList<T>)
         value = realmList
     }
 
-    fun remove() {
-
+    fun remove(index: Int) {
+        realmList.removeAt(index)
+        value = realmList
     }
 }
