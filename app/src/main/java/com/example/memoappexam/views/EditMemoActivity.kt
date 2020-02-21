@@ -16,6 +16,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -38,12 +39,8 @@ class EditMemoActivity : AppCompatActivity() {
 
     // 프래그먼트
     private val fragmentManager = supportFragmentManager
-    private val fragText: MemoTextFragment by lazy {
-        MemoTextFragment()
-    }
-    private val fragImage: MemoImageFragment by lazy {
-        MemoImageFragment()
-    }
+    private lateinit var fragText: MemoTextFragment
+    private lateinit var fragImage: MemoImageFragment
 
     // 이미지 처리 데이터
     private lateinit var currentPhotoPath: String
@@ -65,6 +62,9 @@ class EditMemoActivity : AppCompatActivity() {
             }
         }
 
+        fragText = MemoTextFragment()
+        fragImage = MemoImageFragment()
+
         viewModel!!.let {
             // 프래그먼트 생성
             setFragment(it.fragBtnClicked)
@@ -83,8 +83,8 @@ class EditMemoActivity : AppCompatActivity() {
         }
     }
 
-    override fun onBackPressed() {
-        super.onBackPressed()
+    override fun onPause() {
+        super.onPause()
         viewModel!!.Update_MemoData()
     }
 
@@ -95,8 +95,10 @@ class EditMemoActivity : AppCompatActivity() {
         mMenu = menu
 
         // 새 메모일 경우 자동 수정 모드
-        if (viewModel!!.memoId != null) EditMode(false)
-        else EditMode(true)
+        if (viewModel!!.memoId != null)
+            EditMode(false)
+        else
+            EditMode(true)
 
         return true
     }

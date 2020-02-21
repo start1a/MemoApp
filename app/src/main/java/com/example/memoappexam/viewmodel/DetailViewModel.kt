@@ -26,6 +26,8 @@ class DetailViewModel : ViewModel() {
     private var memoData = MemoData()
     var fragBtnClicked: Int = R.id.btnFragText
 
+    lateinit var onMemoUpdateListener: () -> Unit
+
     private val mRealm: Realm by lazy {
         Realm.getDefaultInstance()
     }

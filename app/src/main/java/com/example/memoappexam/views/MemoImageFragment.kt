@@ -1,6 +1,7 @@
 package com.example.memoappexam.views
 
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -47,9 +48,12 @@ class MemoImageFragment : Fragment() {
                 imgListView.layoutManager = GridLayoutManager(activity, 3)
                 imgListView.adapter = listImageAdapter
             }
-            it.image.observe(this, Observer {
-                listImageAdapter.notifyDataSetChanged()
-            })
+            it.image.observe(this, Observer { listImageAdapter.notifyDataSetChanged() })
+            listImageAdapter.itemClickListener = {
+                val intent = Intent(activity, ImageViewActivity::class.java)
+                intent.putExtra("image", it)
+                startActivity(intent)
+            }
         }
     }
 }

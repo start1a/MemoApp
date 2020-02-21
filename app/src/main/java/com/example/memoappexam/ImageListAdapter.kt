@@ -11,8 +11,16 @@ import kotlinx.android.synthetic.main.item_image_memo.view.*
 class ImageListAdapter(private val list : MutableList<MemoImageData>)
     : RecyclerView.Adapter<MemoImageViewHolder>() {
 
+    lateinit var itemClickListener: (image: String) -> Unit
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MemoImageViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_image_memo, parent, false)
+        view.setOnClickListener {
+            itemClickListener.run {
+                val id = it.tag as String
+                this(id)
+            }
+        }
         return MemoImageViewHolder(view)
     }
 
@@ -22,8 +30,10 @@ class ImageListAdapter(private val list : MutableList<MemoImageData>)
 
     override fun onBindViewHolder(holder: MemoImageViewHolder, position: Int) {
         Glide.with(holder.containerView)
-            .load(list[position]?.image)
+            .load(list[position].image)
             .error(Glide.with(holder.containerView).load(R.drawable.ic_launcher_background))
             .into(holder.containerView.imageItem)
+
+        holder.containerView.tag = list[position].image
     }
 }
