@@ -8,7 +8,7 @@ import com.github.chrisbanes.photoview.PhotoViewAttacher
 import kotlinx.android.synthetic.main.activity_image_view.*
 
 class ImageViewActivity : AppCompatActivity() {
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_image_view)

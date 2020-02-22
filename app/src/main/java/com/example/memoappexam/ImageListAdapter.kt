@@ -5,8 +5,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.memoappexam.data.MemoImageData
-import io.realm.RealmList
 import kotlinx.android.synthetic.main.item_image_memo.view.*
+import java.net.URL
 
 class ImageListAdapter(private val list : MutableList<MemoImageData>)
     : RecyclerView.Adapter<MemoImageViewHolder>() {
@@ -31,7 +31,6 @@ class ImageListAdapter(private val list : MutableList<MemoImageData>)
     override fun onBindViewHolder(holder: MemoImageViewHolder, position: Int) {
         Glide.with(holder.containerView)
             .load(list[position].image)
-            .error(Glide.with(holder.containerView).load(R.drawable.ic_launcher_background))
             .into(holder.containerView.imageItem)
 
         holder.containerView.tag = list[position].image

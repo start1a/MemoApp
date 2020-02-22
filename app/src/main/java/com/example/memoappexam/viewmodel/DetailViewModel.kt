@@ -1,5 +1,6 @@
 package com.example.memoappexam.viewmodel
 
+import android.view.Menu
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
@@ -17,6 +18,7 @@ import kotlinx.android.synthetic.main.activity_edit_memo.view.*
 
 class DetailViewModel : ViewModel() {
 
+    // 메모 정보
     val title: MutableLiveData<String> = MutableLiveData<String>().apply { value = "" }
     val content: MutableLiveData<String> = MutableLiveData<String>().apply { value = "" }
     val image: RealmListLiveData<MemoImageData> by lazy {
@@ -24,9 +26,11 @@ class DetailViewModel : ViewModel() {
     }
     var memoId: String? = null
     private var memoData = MemoData()
-    var fragBtnClicked: Int = R.id.btnFragText
 
-    lateinit var onMemoUpdateListener: () -> Unit
+    // UI 정보
+    var mMenu: Menu? = null
+    var editMode: MutableLiveData<Boolean> = MutableLiveData<Boolean>().apply { value = false }
+    var fragBtnClicked: Int = R.id.btnFragText
 
     private val mRealm: Realm by lazy {
         Realm.getDefaultInstance()
@@ -64,7 +68,7 @@ class DetailViewModel : ViewModel() {
         mMemoDao.deleteMemo(id)
     }
 
-    fun add_ImageMemoData(imageStr: String) {
+    fun add_ImageMemoDataList(imageStr: String) {
         image.add(MemoImageData(imageStr))
     }
 }

@@ -13,8 +13,6 @@ class MemoApplication: Application() {
             .deleteRealmIfMigrationNeeded()
             .build()
         Realm.setDefaultConfiguration(realmConfiguration)
-
-
     }
 
 }

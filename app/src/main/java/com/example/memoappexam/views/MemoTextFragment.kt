@@ -42,8 +42,16 @@ class MemoTextFragment : Fragment() {
         }
 
         viewModel!!.let {
+            // 메모 갱신
             it.title.observe(this, Observer { editTitle.setText(it) })
             it.content.observe(this, Observer { editContent.setText(it) })
+            // T: 수정모드, F: 보기모드
+            it.editMode.observe(this, Observer {
+                editTitle.isFocusable = it
+                editTitle.isFocusableInTouchMode = it
+                editContent.isFocusable = it
+                editContent.isFocusableInTouchMode = it
+            })
         }
     }
 

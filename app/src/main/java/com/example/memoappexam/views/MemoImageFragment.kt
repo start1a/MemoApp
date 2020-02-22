@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -43,17 +42,28 @@ class MemoImageFragment : Fragment() {
         }
 
         viewModel!!.let {
+            // 이미지 리스트
             it.image.value?.let {
                 listImageAdapter = ImageListAdapter(it)
                 imgListView.layoutManager = GridLayoutManager(activity, 3)
                 imgListView.adapter = listImageAdapter
             }
             it.image.observe(this, Observer { listImageAdapter.notifyDataSetChanged() })
-            listImageAdapter.itemClickListener = {
-                val intent = Intent(activity, ImageViewActivity::class.java)
-                intent.putExtra("image", it)
-                startActivity(intent)
-            }
+            // T: 수정모드, F: 보기모드
+            it.editMode.observe(this, Observer {
+                if (it) {
+                    listImageAdapter.itemClickListener = {
+                        // 삭제할 데이터로 설정됨
+                    }
+                } else {
+                    // 이미지 자세히 보기
+                    listImageAdapter.itemClickListener = {
+                        val intent = Intent(activity, ImageViewActivity::class.java)
+                        intent.putExtra("image", it)
+                        startActivity(intent)
+                    }
+                }
+            })
         }
     }
 }

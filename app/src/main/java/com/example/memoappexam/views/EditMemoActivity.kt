@@ -10,13 +10,13 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -26,7 +26,6 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.memoappexam.R
 import com.example.memoappexam.viewmodel.DetailViewModel
 import kotlinx.android.synthetic.main.activity_edit_memo.*
-import kotlinx.android.synthetic.main.fragment_memo_text.*
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -34,7 +33,6 @@ import java.util.*
 
 class EditMemoActivity : AppCompatActivity() {
 
-    private var mMenu: Menu? = null
     private var viewModel: DetailViewModel? = null
 
     // 프래그먼트
@@ -66,9 +64,8 @@ class EditMemoActivity : AppCompatActivity() {
         fragImage = MemoImageFragment()
 
         viewModel!!.let {
-            // 프래그먼트 생성
             setFragment(it.fragBtnClicked)
-            // 메모 데이터 로드
+
             val id = intent.getStringExtra("memoId")
             if (id != null && it.memoId == null) it.Load_MemoData(id)
         }
@@ -85,23 +82,24 @@ class EditMemoActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+        Log.d("logg : ", "~ActivityPause")
         viewModel!!.Update_MemoData()
     }
 
     // 최초 메모
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        // return super.onCreateOptionsMenu(menu)
-        menuInflater.inflate(R.menu.menu_detail_memo, menu)
-        mMenu = menu
-
-        // 새 메모일 경우 자동 수정 모드
-        if (viewModel!!.memoId != null)
-            EditMode(false)
-        else
-            EditMode(true)
-
-        return true
+        viewModel!!.let {
+            it.mMenu = menu
+            it.editMode.observe(this, androidx.lifecycle.Observer {
+                viewModel!!.mMenu?.clear()
+                supportActionBar?.setDisplayHomeAsUpEnabled(it)
+                if (it) menuInflater.inflate(R.menu.menu_detail_memo_edit, viewModel!!.mMenu)
+                else menuInflater.inflate(R.menu.menu_detail_memo, viewModel!!.mMenu)
+            })
+            return true
+        }
     }
+
 
     // 메뉴 버튼이 눌림
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -109,12 +107,12 @@ class EditMemoActivity : AppCompatActivity() {
         when (item.itemId) {
 
             R.id.action_edit -> {
-                EditMode(true)
+                viewModel!!.editMode.value = true
                 return true
             }
 
             android.R.id.home -> {
-                EditMode(false)
+                viewModel!!.editMode.value = false
                 return true
             }
 
@@ -135,9 +133,9 @@ class EditMemoActivity : AppCompatActivity() {
                 val view = LayoutInflater.from(this).inflate(R.layout.dialog_insert_image, null)
 
                 view.findViewById<Button>(R.id.btnGallery).setOnClickListener {
-                    val intent = Intent()
+                    val intent = Intent(Intent.ACTION_PICK, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)
                     intent.type = "image/*"
-                    intent.action = Intent.ACTION_GET_CONTENT
+                    intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
                     startActivityForResult(intent, REQUEST_IMAGE_GALLERY)
                 }
 
@@ -193,44 +191,31 @@ class EditMemoActivity : AppCompatActivity() {
 
         when (requestCode) {
             REQUEST_IMAGE_GALLERY -> {
-                if (resultCode == Activity.RESULT_OK && data != null && data.data != null) {
-                    viewModel!!.add_ImageMemoData(data.data.toString())
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    val uri = data.data
+                    val clipData = data.clipData
+
+                    if (clipData != null) {
+                        for (i in 0..clipData.itemCount - 1) {
+                            val item = clipData.getItemAt(i).uri
+                            viewModel!!.add_ImageMemoDataList(item.toString())
+                        }
+                    }
+                    else if (uri != null) {
+                        viewModel!!.add_ImageMemoDataList(uri.toString())
+                    }
                 }
             }
 
             REQUEST_IMAGE_CAMERA -> {
                 if (resultCode == Activity.RESULT_OK && data != null) {
-                    viewModel!!.add_ImageMemoData(photoURI.toString())
+                    viewModel!!.add_ImageMemoDataList(photoURI.toString())
                 }
             }
 
             REQUEST_IMAGE_URL -> {
 
             }
-        }
-    }
-
-    // 상단 메뉴 전환
-    fun EditMode(on: Boolean) {
-        // 좌측 상단 메뉴
-        supportActionBar?.setDisplayHomeAsUpEnabled(on)
-        // 우측 상단 메뉴
-        mMenu?.let {
-            it.findItem(R.id.action_edit)?.setVisible(!on)
-            it.findItem(R.id.action_delete)?.setVisible(!on)
-            it.findItem(R.id.action_insert_image)?.setVisible(on)
-        }
-        // 제목
-        editTitle?.let {
-            it.isFocusableInTouchMode = on
-            it.isFocusable = on
-            it.showKeyboard(on)
-        }
-        // 내용
-        editContent?.let {
-            it.isFocusableInTouchMode = on
-            it.isFocusable = on
-            it.showKeyboard(on)
         }
     }
 
