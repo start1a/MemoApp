@@ -10,6 +10,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.memoappexam.ImageListAdapter
 import com.example.memoappexam.R
 import com.example.memoappexam.viewmodel.DetailViewModel
@@ -56,6 +58,7 @@ class MemoImageFragment : Fragment() {
                         // 삭제할 데이터로 설정됨
                     }
                 } else {
+
                     // 이미지 자세히 보기
                     listImageAdapter.itemClickListener = {
                         val intent = Intent(activity, ImageViewActivity::class.java)

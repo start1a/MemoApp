@@ -35,14 +35,12 @@ class MemoListAdapter(private val list: MutableList<MemoData>) :
             Glide.with(holder.containerView)
                 .load(list[position].images[0]?.image)
                 .into(holder.containerView.imageMemo)
-        } else {
-            Glide.with(holder.containerView)
-                .load(R.drawable.ic_launcher_background)
-                .into(holder.containerView.imageMemo)
         }
 
         // 텍스트
-        holder.containerView.textTitle.text = list[position].title
+        if (list[position].title.length > 20)
+            holder.containerView.textTitle.text = list[position].title.substring(0..20) + ".."
+        else holder.containerView.textTitle.text = list[position].title
         holder.containerView.textSummary.text = list[position].summary
         holder.containerView.tag = list[position].id
     }

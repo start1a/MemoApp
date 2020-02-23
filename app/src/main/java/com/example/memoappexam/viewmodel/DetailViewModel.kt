@@ -19,18 +19,25 @@ import kotlinx.android.synthetic.main.activity_edit_memo.view.*
 class DetailViewModel : ViewModel() {
 
     // 메모 정보
-    val title: MutableLiveData<String> = MutableLiveData<String>().apply { value = "" }
-    val content: MutableLiveData<String> = MutableLiveData<String>().apply { value = "" }
+    val title: MutableLiveData<String> = MutableLiveData<String>()
+    val content: MutableLiveData<String> = MutableLiveData<String>()
     val image: RealmListLiveData<MemoImageData> by lazy {
         RealmListLiveData<MemoImageData>(memoData.images)
     }
     var memoId: String? = null
     private var memoData = MemoData()
+    // 텍스트 임시 데이터
+    var titleTemp: String = ""
+    var contentTemp: String = ""
 
     // UI 정보
     var mMenu: Menu? = null
     var editMode: MutableLiveData<Boolean> = MutableLiveData<Boolean>().apply { value = false }
     var fragBtnClicked: Int = R.id.btnFragText
+
+    // 메모 텍스트 저장 리스너
+    lateinit var memoTitleSaveListener: () -> Unit
+    lateinit var memoContentSaveListener: () -> Unit
 
     private val mRealm: Realm by lazy {
         Realm.getDefaultInstance()
@@ -45,23 +52,22 @@ class DetailViewModel : ViewModel() {
         mRealm.close()
     }
 
-    fun saveLiveData(editTitle: String, editContent: String) {
-        title.value = editTitle
-        content.value = editContent
+    fun saveLiveData() {
+        title.value = titleTemp
+        content.value = contentTemp
     }
 
     fun Load_MemoData(id: String) {
         memoData = mMemoDao.selectMemo(id)
         memoId = id
-        title.value = memoData.title
-        content.value = memoData.content
+        titleTemp = memoData.title
+        contentTemp = memoData.content
     }
 
     fun Update_MemoData() {
-        if (title.value?.count() ?: 0 > 0 || content.value?.count() ?: 0 > 0 || image.value?.size ?: 0 > 0)
-            mMemoDao.addUpdateMemo(
-                memoData, title.value ?: "", content.value ?: "", image.value ?: RealmList()
-            )
+        mMemoDao.addUpdateMemo(
+            memoData, titleTemp, contentTemp, image.value ?: RealmList()
+        )
     }
 
     fun Delete_MemoData(id: String) {

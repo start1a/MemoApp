@@ -5,12 +5,13 @@ import android.app.Activity
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -36,7 +37,6 @@ class EditMemoActivity : AppCompatActivity() {
     private var viewModel: DetailViewModel? = null
 
     // 프래그먼트
-    private val fragmentManager = supportFragmentManager
     private lateinit var fragText: MemoTextFragment
     private lateinit var fragImage: MemoImageFragment
 
@@ -59,7 +59,6 @@ class EditMemoActivity : AppCompatActivity() {
                     .get(DetailViewModel::class.java)
             }
         }
-
         fragText = MemoTextFragment()
         fragImage = MemoImageFragment()
 
@@ -80,13 +79,11 @@ class EditMemoActivity : AppCompatActivity() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        Log.d("logg : ", "~ActivityPause")
+    override fun onBackPressed() {
+        super.onBackPressed()
         viewModel!!.Update_MemoData()
     }
 
-    // 최초 메모
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         viewModel!!.let {
             it.mMenu = menu
@@ -133,10 +130,12 @@ class EditMemoActivity : AppCompatActivity() {
                 val view = LayoutInflater.from(this).inflate(R.layout.dialog_insert_image, null)
 
                 view.findViewById<Button>(R.id.btnGallery).setOnClickListener {
-                    val intent = Intent(Intent.ACTION_PICK, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)
+                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)
                     intent.type = "image/*"
                     intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-                    startActivityForResult(intent, REQUEST_IMAGE_GALLERY)
+                    intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION)
+                    intent.addFlags(FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+                    startActivityForResult(Intent.createChooser(intent,"Select Picture"), REQUEST_IMAGE_GALLERY)
                 }
 
                 view.findViewById<Button>(R.id.btnCamera).setOnClickListener {
@@ -231,11 +230,11 @@ class EditMemoActivity : AppCompatActivity() {
 
     fun setFragment(type: Int) {
         when (type) {
-            R.id.btnFragText -> fragmentManager.beginTransaction().replace(
+            R.id.btnFragText -> supportFragmentManager.beginTransaction().replace(
                 R.id.memoDetailLayout,
                 fragText
             ).commit()
-            R.id.btnFragImage -> fragmentManager.beginTransaction().replace(
+            R.id.btnFragImage -> supportFragmentManager.beginTransaction().replace(
                 R.id.memoDetailLayout,
                 fragImage
             ).commit()
