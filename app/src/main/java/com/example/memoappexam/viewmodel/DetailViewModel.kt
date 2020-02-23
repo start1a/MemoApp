@@ -29,11 +29,14 @@ class DetailViewModel : ViewModel() {
     // 텍스트 임시 데이터
     var titleTemp: String = ""
     var contentTemp: String = ""
+    // 이미지 삭제 리스트
+    var deleteImageList: MutableList<Int> = mutableListOf()
+    lateinit var deleteImageListListener: () -> Unit
 
     // UI 정보
     var mMenu: Menu? = null
     var editMode: MutableLiveData<Boolean> = MutableLiveData<Boolean>().apply { value = false }
-    var fragBtnClicked: Int = R.id.btnFragText
+    var fragBtnClicked: MutableLiveData<Int> = MutableLiveData<Int>().apply { value = R.id.btnFragText }
 
     // 메모 텍스트 저장 리스너
     lateinit var memoTitleSaveListener: () -> Unit
@@ -52,9 +55,21 @@ class DetailViewModel : ViewModel() {
         mRealm.close()
     }
 
-    fun saveLiveData() {
+    fun saveText() {
         title.value = titleTemp
         content.value = contentTemp
+    }
+
+    fun saveDeleteImageList(list: MutableList<Int>) {
+        deleteImageList = list
+    }
+
+    fun setEditMode(on: Boolean) {
+        editMode.value = on
+    }
+
+    fun setFragBtn(type: Int) {
+        fragBtnClicked.value = type
     }
 
     fun Load_MemoData(id: String) {

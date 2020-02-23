@@ -5,8 +5,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
-import android.content.Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
-import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
@@ -18,6 +16,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -63,19 +62,21 @@ class EditMemoActivity : AppCompatActivity() {
         fragImage = MemoImageFragment()
 
         viewModel!!.let {
-            setFragment(it.fragBtnClicked)
+            setFragment(it.fragBtnClicked.value!!)
 
             val id = intent.getStringExtra("memoId")
             if (id != null && it.memoId == null) it.Load_MemoData(id)
         }
 
-        btnFragText.setOnClickListener {
-            setFragment(it.id)
-            viewModel!!.fragBtnClicked = it.id
-        }
-        btnFragImage.setOnClickListener {
-            setFragment(it.id)
-            viewModel!!.fragBtnClicked = it.id
+        btnFragText.setOnClickListener { ReplaceFragment(it.id) }
+        btnFragImage.setOnClickListener { ReplaceFragment(it.id) }
+    }
+
+    fun ReplaceFragment(id: Int) {
+        viewModel!!.let {
+            setFragment(id)
+            it.setFragBtn(id)
+            it.setEditMode(false)
         }
     }
 
@@ -90,13 +91,23 @@ class EditMemoActivity : AppCompatActivity() {
             it.editMode.observe(this, androidx.lifecycle.Observer {
                 viewModel!!.mMenu?.clear()
                 supportActionBar?.setDisplayHomeAsUpEnabled(it)
-                if (it) menuInflater.inflate(R.menu.menu_detail_memo_edit, viewModel!!.mMenu)
-                else menuInflater.inflate(R.menu.menu_detail_memo, viewModel!!.mMenu)
+                if (it) menuInflater.inflate(R.menu.menu_delete_memo, viewModel!!.mMenu)
+                else menuView()
+            })
+            it.fragBtnClicked.observe(this, androidx.lifecycle.Observer {
+                viewModel!!.mMenu?.clear()
+                menuView()
             })
             return true
         }
     }
 
+    fun menuView() {
+        when (viewModel!!.fragBtnClicked.value!!) {
+            R.id.btnFragText -> menuInflater.inflate(R.menu.menu_text_memo, viewModel!!.mMenu)
+            R.id.btnFragImage -> menuInflater.inflate(R.menu.menu_image_memo, viewModel!!.mMenu)
+        }
+    }
 
     // 메뉴 버튼이 눌림
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -105,37 +116,27 @@ class EditMemoActivity : AppCompatActivity() {
 
             R.id.action_edit -> {
                 viewModel!!.editMode.value = true
-                return true
+                viewModel!!.deleteImageListListener = { DialogDeleteMemo() }
             }
 
-            android.R.id.home -> {
-                viewModel!!.editMode.value = false
-                return true
-            }
+            android.R.id.home -> viewModel!!.editMode.value = false
 
-            R.id.action_delete -> {
-                AlertDialog.Builder(this)
-                    .setTitle("메모를 삭제하시겠습니까?")
-                    .setNegativeButton("취소", null)
-                    .setPositiveButton("확인", DialogInterface.OnClickListener { dialog, i ->
-                        val id = viewModel!!.memoId
-                        if (id != null) viewModel!!.Delete_MemoData(id)
-                        finish()
-                    }).show()
-
-                return true
-            }
+            R.id.action_delete -> DialogDeleteMemo()
 
             R.id.action_insert_image -> {
                 val view = LayoutInflater.from(this).inflate(R.layout.dialog_insert_image, null)
 
                 view.findViewById<Button>(R.id.btnGallery).setOnClickListener {
-                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)
+                    val intent = Intent(
+                        Intent.ACTION_OPEN_DOCUMENT,
+                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                    )
                     intent.type = "image/*"
                     intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-                    intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION)
-                    intent.addFlags(FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
-                    startActivityForResult(Intent.createChooser(intent,"Select Picture"), REQUEST_IMAGE_GALLERY)
+                    startActivityForResult(
+                        Intent.createChooser(intent, "Select Picture"),
+                        REQUEST_IMAGE_GALLERY
+                    )
                 }
 
                 view.findViewById<Button>(R.id.btnCamera).setOnClickListener {
@@ -178,11 +179,15 @@ class EditMemoActivity : AppCompatActivity() {
                 AlertDialog.Builder(this).setView(view)
                     .setTitle("이미지 추가")
                     .show()
-                return true
             }
+
+            R.id.action_delete_image -> viewModel!!.editMode.value = true
+
+            R.id.action_delete_image_confirm -> viewModel!!.deleteImageListListener()
 
             else -> return super.onOptionsItemSelected(item)
         }
+        return true
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -199,8 +204,7 @@ class EditMemoActivity : AppCompatActivity() {
                             val item = clipData.getItemAt(i).uri
                             viewModel!!.add_ImageMemoDataList(item.toString())
                         }
-                    }
-                    else if (uri != null) {
+                    } else if (uri != null) {
                         viewModel!!.add_ImageMemoDataList(uri.toString())
                     }
                 }
@@ -216,6 +220,17 @@ class EditMemoActivity : AppCompatActivity() {
 
             }
         }
+    }
+
+    fun DialogDeleteMemo() {
+        AlertDialog.Builder(this)
+            .setTitle("메모를 삭제하시겠습니까?")
+            .setNegativeButton("취소", null)
+            .setPositiveButton("확인", DialogInterface.OnClickListener { dialog, i ->
+                val id = viewModel!!.memoId
+                if (id != null) viewModel!!.Delete_MemoData(id)
+                finish()
+            }).show()
     }
 
     fun View.showKeyboard(on: Boolean) {

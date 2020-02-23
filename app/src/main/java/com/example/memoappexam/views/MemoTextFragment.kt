@@ -70,7 +70,7 @@ class MemoTextFragment : Fragment() {
             it.memoTitleSaveListener = { it.titleTemp = editTitle.text.toString() }
             it.memoContentSaveListener = { it.contentTemp = editContent.text.toString() }
             // 기존의 메모 로드
-            it.saveLiveData()
+            it.saveText()
         }
     }
 }

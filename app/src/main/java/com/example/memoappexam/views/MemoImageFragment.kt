@@ -10,8 +10,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.memoappexam.ImageListAdapter
 import com.example.memoappexam.R
 import com.example.memoappexam.viewmodel.DetailViewModel
@@ -35,6 +33,7 @@ class MemoImageFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+
         viewModel = activity!!.application!!.let {
             ViewModelProvider(
                 activity!!.viewModelStore,
@@ -44,29 +43,45 @@ class MemoImageFragment : Fragment() {
         }
 
         viewModel!!.let {
-            // 이미지 리스트
-            it.image.value?.let {
-                listImageAdapter = ImageListAdapter(it)
-                imgListView.layoutManager = GridLayoutManager(activity, 3)
-                imgListView.adapter = listImageAdapter
-            }
             it.image.observe(this, Observer { listImageAdapter.notifyDataSetChanged() })
             // T: 수정모드, F: 보기모드
             it.editMode.observe(this, Observer {
-                if (it) {
-                    listImageAdapter.itemClickListener = {
-                        // 삭제할 데이터로 설정됨
-                    }
-                } else {
-
-                    // 이미지 자세히 보기
-                    listImageAdapter.itemClickListener = {
-                        val intent = Intent(activity, ImageViewActivity::class.java)
-                        intent.putExtra("image", it)
-                        startActivity(intent)
+                // 이미지 자세히 보기
+                if (!it) {
+                    listImageAdapter.let {
+                        it.itemClickListener = {
+                            val intent = Intent(activity, ImageViewActivity::class.java)
+                            intent.putExtra("image", it)
+                            startActivity(intent)
+                        }
+                        it.deleteImageList.clear()
                     }
                 }
+                // 삭제 모드 여부
+                listImageAdapter.editMode = it
+                listImageAdapter.notifyDataSetChanged()
             })
+            it.deleteImageListListener = {
+                for (i in 0..listImageAdapter.deleteImageList.size - 1)
+                    it.image.value?.removeAt(listImageAdapter.deleteImageList[i])
+                listImageAdapter.let {
+                    it.deleteImageList.clear()
+                    it.notifyDataSetChanged()
+                }
+            }
+
+            // 이미지 리스트
+            it.image.value?.let {
+                listImageAdapter = ImageListAdapter(it)
+                listImageAdapter.deleteImageList = viewModel!!.deleteImageList
+                imgListView.layoutManager = GridLayoutManager(activity, 3)
+                imgListView.adapter = listImageAdapter
+            }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        viewModel!!.saveDeleteImageList(listImageAdapter.deleteImageList)
     }
 }
