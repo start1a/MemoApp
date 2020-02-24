@@ -1,5 +1,7 @@
-package com.example.memoappexam.data
+package com.example.memoappexam.Model
 
+import com.example.memoappexam.data.MemoData
+import com.example.memoappexam.data.MemoImageData
 import io.realm.Realm
 import io.realm.RealmList
 import io.realm.RealmResults

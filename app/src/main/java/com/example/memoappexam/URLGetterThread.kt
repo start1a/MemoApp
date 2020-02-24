@@ -1,4 +1,4 @@
-package com.example.memoappexam.data
+package com.example.memoappexam
 
 import android.app.AlertDialog
 import android.content.Context

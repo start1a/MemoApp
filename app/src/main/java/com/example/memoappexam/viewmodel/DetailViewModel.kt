@@ -1,20 +1,15 @@
 package com.example.memoappexam.viewmodel
 
 import android.view.Menu
-import android.view.View
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.memoappexam.R
-import com.example.memoappexam.data.MemoDao
+import com.example.memoappexam.Model.MemoDao
 import com.example.memoappexam.data.MemoData
 import com.example.memoappexam.data.MemoImageData
 import com.example.memoappexam.data.RealmListLiveData
-import com.example.memoappexam.views.MemoTextFragment
 import io.realm.Realm
-import io.realm.RealmChangeListener
 import io.realm.RealmList
-import kotlinx.android.synthetic.main.activity_edit_memo.view.*
 
 class DetailViewModel : ViewModel() {
 

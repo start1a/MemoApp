@@ -2,7 +2,6 @@ package com.example.memoappexam.views
 
 import android.Manifest
 import android.app.Activity
-import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -13,11 +12,8 @@ import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
-import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -25,24 +21,17 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModelProvider
 import com.example.memoappexam.R
-import com.example.memoappexam.data.URLGetterThread
+import com.example.memoappexam.URLGetterThread
 import com.example.memoappexam.viewmodel.DetailViewModel
 import kotlinx.android.synthetic.main.activity_edit_memo.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
-import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
-import javax.net.ssl.HttpsURLConnection
 
 class EditMemoActivity : AppCompatActivity() {
 
     private var viewModel: DetailViewModel? = null
-    private var job: Job? = null
 
     // 프래그먼트
     private lateinit var fragText: MemoTextFragment
@@ -86,17 +75,6 @@ class EditMemoActivity : AppCompatActivity() {
             it.setFragBtn(id)
             it.setEditMode(false)
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        job = null
-    }
-
-    override fun onPause() {
-        super.onPause()
-        job?.cancel()
-        job = null
     }
 
     override fun onBackPressed() {
@@ -203,19 +181,12 @@ class EditMemoActivity : AppCompatActivity() {
                     val editUrl = view.findViewById<EditText>(R.id.editURL)
 
                     view.findViewById<Button>(R.id.btnURLImageAdd).setOnClickListener {
-                        var code: Int? = null
-                        job = GlobalScope.launch(Dispatchers.Default) {
-                            var con: HttpsURLConnection? = null
-
-                            var url = URL(editUrl.text.toString())
-                            con = url.openConnection() as HttpsURLConnection
-                            con.connect()
-
-                            code = con.responseCode
-                            con.disconnect()
+                        val urlGetterThread =
+                            URLGetterThread(this)
+                        urlGetterThread.execute(editUrl.text.toString())
+                        urlGetterThread.urlImageSaveListener = {
+                            viewModel!!.add_ImageMemoDataList(editUrl.text.toString())
                         }
-                        Toast.makeText(this, code.toString(), Toast.LENGTH_SHORT).show()
-                        viewModel!!.add_ImageMemoDataList(editUrl.text.toString())
                         dialogInterface?.dismiss()
                     }
                     dialogInterface?.dismiss()
@@ -266,6 +237,7 @@ class EditMemoActivity : AppCompatActivity() {
             }
         }
     }
+
 
     fun DialogDeleteMemo() {
         AlertDialog.Builder(this)

@@ -1,7 +1,7 @@
 package com.example.memoappexam.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.example.memoappexam.data.MemoDao
+import com.example.memoappexam.Model.MemoDao
 import com.example.memoappexam.data.MemoData
 import com.example.memoappexam.data.RealmLiveData
 import io.realm.Realm
