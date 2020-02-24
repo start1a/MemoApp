@@ -36,7 +36,8 @@ class DetailViewModel : ViewModel() {
     // UI 정보
     var mMenu: Menu? = null
     var editMode: MutableLiveData<Boolean> = MutableLiveData<Boolean>().apply { value = false }
-    var fragBtnClicked: MutableLiveData<Int> = MutableLiveData<Int>().apply { value = R.id.btnFragText }
+    var fragBtnClicked: MutableLiveData<Int> =
+        MutableLiveData<Int>().apply { value = R.id.btnFragText }
 
     // 메모 텍스트 저장 리스너
     lateinit var memoTitleSaveListener: () -> Unit
@@ -80,9 +81,10 @@ class DetailViewModel : ViewModel() {
     }
 
     fun Update_MemoData() {
-        mMemoDao.addUpdateMemo(
-            memoData, titleTemp, contentTemp, image.value ?: RealmList()
-        )
+        if (titleTemp.length > 0 || contentTemp.length > 0 || image.value?.size ?: 0 > 0)
+            mMemoDao.addUpdateMemo(
+                memoData, titleTemp, contentTemp, image.value ?: RealmList()
+            )
     }
 
     fun Delete_MemoData(id: String) {

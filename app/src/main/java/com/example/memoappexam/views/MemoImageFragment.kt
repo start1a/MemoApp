@@ -14,6 +14,7 @@ import com.example.memoappexam.ImageListAdapter
 import com.example.memoappexam.R
 import com.example.memoappexam.viewmodel.DetailViewModel
 import kotlinx.android.synthetic.main.fragment_memo_image_list.*
+import java.util.*
 
 /**
  * A simple [Fragment] subclass.
@@ -62,8 +63,13 @@ class MemoImageFragment : Fragment() {
                 listImageAdapter.notifyDataSetChanged()
             })
             it.deleteImageListListener = {
-                for (i in 0..listImageAdapter.deleteImageList.size - 1)
-                    it.image.value?.removeAt(listImageAdapter.deleteImageList[i])
+                val list = listImageAdapter.deleteImageList
+                // 내림차순 정렬 후 인덱스 별 삭제
+                Collections.sort(list, Collections.reverseOrder())
+                for (i in 0..list.size - 1) {
+                    it.image.value?.removeAt(list[i])
+                }
+
                 listImageAdapter.let {
                     it.deleteImageList.clear()
                     it.notifyDataSetChanged()

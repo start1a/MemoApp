@@ -16,6 +16,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
+import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -24,16 +25,24 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModelProvider
 import com.example.memoappexam.R
+import com.example.memoappexam.data.URLGetterThread
 import com.example.memoappexam.viewmodel.DetailViewModel
 import kotlinx.android.synthetic.main.activity_edit_memo.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
+import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
+import javax.net.ssl.HttpsURLConnection
 
 class EditMemoActivity : AppCompatActivity() {
 
     private var viewModel: DetailViewModel? = null
+    private var job: Job? = null
 
     // 프래그먼트
     private lateinit var fragText: MemoTextFragment
@@ -44,7 +53,6 @@ class EditMemoActivity : AppCompatActivity() {
     private lateinit var photoURI: Uri
     private val REQUEST_IMAGE_GALLERY = 0
     private val REQUEST_IMAGE_CAMERA = 1
-    private val REQUEST_IMAGE_URL = 2
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,6 +86,17 @@ class EditMemoActivity : AppCompatActivity() {
             it.setFragBtn(id)
             it.setEditMode(false)
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        job = null
+    }
+
+    override fun onPause() {
+        super.onPause()
+        job?.cancel()
+        job = null
     }
 
     override fun onBackPressed() {
@@ -124,11 +143,15 @@ class EditMemoActivity : AppCompatActivity() {
             R.id.action_delete -> DialogDeleteMemo()
 
             R.id.action_insert_image -> {
+
+                var dialogInterface: DialogInterface? = null
+                val alertDialog = AlertDialog.Builder(this)
+
                 val view = LayoutInflater.from(this).inflate(R.layout.dialog_insert_image, null)
 
                 view.findViewById<Button>(R.id.btnGallery).setOnClickListener {
                     val intent = Intent(
-                        Intent.ACTION_OPEN_DOCUMENT,
+                        Intent.ACTION_GET_CONTENT,
                         MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
                     )
                     intent.type = "image/*"
@@ -140,6 +163,7 @@ class EditMemoActivity : AppCompatActivity() {
                 }
 
                 view.findViewById<Button>(R.id.btnCamera).setOnClickListener {
+
                     val permissioncheck =
                         ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
 
@@ -170,13 +194,38 @@ class EditMemoActivity : AppCompatActivity() {
                             }
                         }
                     }
+
                 }
 
                 view.findViewById<Button>(R.id.btnURL).setOnClickListener {
 
-                }
+                    val view = LayoutInflater.from(this).inflate(R.layout.dialog_edit_url, null)
+                    val editUrl = view.findViewById<EditText>(R.id.editURL)
 
-                AlertDialog.Builder(this).setView(view)
+                    view.findViewById<Button>(R.id.btnURLImageAdd).setOnClickListener {
+                        var code: Int? = null
+                        job = GlobalScope.launch(Dispatchers.Default) {
+                            var con: HttpsURLConnection? = null
+
+                            var url = URL(editUrl.text.toString())
+                            con = url.openConnection() as HttpsURLConnection
+                            con.connect()
+
+                            code = con.responseCode
+                            con.disconnect()
+                        }
+                        Toast.makeText(this, code.toString(), Toast.LENGTH_SHORT).show()
+                        viewModel!!.add_ImageMemoDataList(editUrl.text.toString())
+                        dialogInterface?.dismiss()
+                    }
+                    dialogInterface?.dismiss()
+                    dialogInterface = alertDialog
+                        .setView(view)
+                        .setTitle("URL을 입력하세요")
+                        .show()
+                }
+                dialogInterface = alertDialog
+                    .setView(view)
                     .setTitle("이미지 추가")
                     .show()
             }
@@ -215,10 +264,6 @@ class EditMemoActivity : AppCompatActivity() {
                     viewModel!!.add_ImageMemoDataList(photoURI.toString())
                 }
             }
-
-            REQUEST_IMAGE_URL -> {
-
-            }
         }
     }
 
@@ -231,16 +276,6 @@ class EditMemoActivity : AppCompatActivity() {
                 if (id != null) viewModel!!.Delete_MemoData(id)
                 finish()
             }).show()
-    }
-
-    fun View.showKeyboard(on: Boolean) {
-        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-
-        if (on) imm.toggleSoftInput(
-            InputMethodManager.SHOW_FORCED,
-            InputMethodManager.HIDE_IMPLICIT_ONLY
-        )
-        else imm.hideSoftInputFromWindow(windowToken, 0)
     }
 
     fun setFragment(type: Int) {
@@ -269,6 +304,5 @@ class EditMemoActivity : AppCompatActivity() {
             // Save a file: path for use with ACTION_VIEW intents
             currentPhotoPath = absolutePath
         }
-
     }
 }
