@@ -30,13 +30,17 @@ class MemoListAdapter(private val list: MutableList<MemoData>) :
     }
 
     override fun onBindViewHolder(holder: MemoViewHolder, position: Int) {
-        if (list[position].images.size > 0) {
+        // 썸네일 이미지
+        if (list[position].images.size > 0)
+        {
             Glide.with(holder.containerView)
                 .load(list[position].images[0]?.image)
                 .into(holder.containerView.imageMemo)
-        } else {
+        }
+        else
+        {
             Glide.with(holder.containerView)
-                .load("")
+                .load(R.drawable.icon_no_image)
                 .into(holder.containerView.imageMemo)
         }
 

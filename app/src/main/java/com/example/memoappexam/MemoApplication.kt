@@ -10,6 +10,8 @@ class MemoApplication: Application() {
         super.onCreate()
         Realm.init(this)
         val realmConfiguration = RealmConfiguration.Builder()
+            .schemaVersion(0)
+            .migration(MemoDBMigration())
             .deleteRealmIfMigrationNeeded()
             .build()
         Realm.setDefaultConfiguration(realmConfiguration)

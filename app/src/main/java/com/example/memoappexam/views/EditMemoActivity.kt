@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -59,22 +60,16 @@ class EditMemoActivity : AppCompatActivity() {
         fragImage = MemoImageFragment()
 
         viewModel!!.let {
-            setFragment(it.fragBtnClicked.value!!)
-
+            it.fragBtnClicked.observe(this, androidx.lifecycle.Observer {
+                setFragment()
+                viewModel!!.setEditMode(false)
+            })
             val id = intent.getStringExtra("memoId")
             if (id != null && it.memoId == null) it.Load_MemoData(id)
         }
 
-        btnFragText.setOnClickListener { ReplaceFragment(it.id) }
-        btnFragImage.setOnClickListener { ReplaceFragment(it.id) }
-    }
-
-    fun ReplaceFragment(id: Int) {
-        viewModel!!.let {
-            setFragment(id)
-            it.setFragBtn(id)
-            it.setEditMode(false)
-        }
+        btnFragText.setOnClickListener { viewModel!!.setFragBtn(it.id) }
+        btnFragImage.setOnClickListener { viewModel!!.setFragBtn(it.id) }
     }
 
     override fun onBackPressed() {
@@ -172,7 +167,6 @@ class EditMemoActivity : AppCompatActivity() {
                             }
                         }
                     }
-
                 }
 
                 view.findViewById<Button>(R.id.btnURL).setOnClickListener {
@@ -250,8 +244,8 @@ class EditMemoActivity : AppCompatActivity() {
             }).show()
     }
 
-    fun setFragment(type: Int) {
-        when (type) {
+    fun setFragment() {
+        when (viewModel!!.fragBtnClicked.value) {
             R.id.btnFragText -> supportFragmentManager.beginTransaction().replace(
                 R.id.memoDetailLayout,
                 fragText
