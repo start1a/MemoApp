@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto">
+
+<item
+    android:id="@+id/action_fragment_text"
+    android:title="@string/memo_text"
+    android:icon="@drawable/ic_text_fields_black_24dp"
+    app:showAsAction="ifRoom"/>
+
+<item
+    android:id="@+id/action_fragment_image"
+    android:title="@string/mem_image"
+    android:icon="@drawable/ic_insert_photo_black_24dp"
+    app:showAsAction="ifRoom"/>
+
+</menu>

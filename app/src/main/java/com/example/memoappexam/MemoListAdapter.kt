@@ -31,22 +31,28 @@ class MemoListAdapter(private val list: MutableList<MemoData>) :
 
     override fun onBindViewHolder(holder: MemoViewHolder, position: Int) {
         // 썸네일 이미지
-        if (list[position].images.size > 0)
+        if (list[position].imageFileLinks.size > 0)
         {
             Glide.with(holder.containerView)
-                .load(list[position].images[0]?.image)
+                .load(list[position].imageFileLinks[0]?.run {
+                    if (this.thumbnailPath.isNotEmpty())
+                        this.thumbnailPath
+                    else
+                        this.uri
+                })
+                .error(R.drawable.icon_error)
                 .into(holder.containerView.imageMemo)
         }
         else
         {
             Glide.with(holder.containerView)
-                .load(R.drawable.icon_no_image)
+                .load(R.drawable.icon_no_image_1)
                 .into(holder.containerView.imageMemo)
         }
 
         // 텍스트
         if (list[position].title.length > 20)
-            holder.containerView.textTitle.text = list[position].title.substring(0..20) + ".."
+            holder.containerView.textTitle.text = list[position].title.substring(0..25) + ".."
         else holder.containerView.textTitle.text = list[position].title
         holder.containerView.textSummary.text = list[position].summary
         holder.containerView.tag = list[position].id

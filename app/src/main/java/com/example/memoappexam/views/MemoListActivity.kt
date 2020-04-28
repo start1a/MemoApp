@@ -6,7 +6,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.memoappexam.R
 import com.example.memoappexam.viewmodel.MemoListViewModel
-
 import kotlinx.android.synthetic.main.activity_memo_list.*
 
 class MemoListActivity : AppCompatActivity() {
@@ -19,7 +18,12 @@ class MemoListActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
 
-        fab.setOnClickListener { view ->
+        viewModel = application!!.let {
+            ViewModelProvider(viewModelStore, ViewModelProvider.AndroidViewModelFactory(it))
+                .get(MemoListViewModel::class.java)
+        }
+
+        fab.setOnClickListener {
             val intent = Intent(applicationContext, EditMemoActivity::class.java)
             startActivity(intent)
         }
@@ -27,10 +31,5 @@ class MemoListActivity : AppCompatActivity() {
         val fragmentTransaction = supportFragmentManager.beginTransaction()
         fragmentTransaction.replace(R.id.memoListLayout, MemoListFragment())
         fragmentTransaction.commit()
-
-        viewModel = application!!.let {
-            ViewModelProvider(viewModelStore, ViewModelProvider.AndroidViewModelFactory(it))
-                .get(MemoListViewModel::class.java)
-        }
     }
 }

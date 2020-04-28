@@ -14,7 +14,6 @@ import com.example.memoappexam.ImageListAdapter
 import com.example.memoappexam.R
 import com.example.memoappexam.viewmodel.DetailViewModel
 import kotlinx.android.synthetic.main.fragment_memo_image_list.*
-import java.util.*
 
 /**
  * A simple [Fragment] subclass.
@@ -43,51 +42,53 @@ class MemoImageFragment : Fragment() {
                 .get(DetailViewModel::class.java)
         }
 
-        viewModel!!.let {
-            it.image.observe(this, Observer { listImageAdapter.notifyDataSetChanged() })
-            // T: 수정모드, F: 보기모드
-            it.editMode.observe(this, Observer {
-                // 이미지 자세히 보기
-                if (!it) {
-                    listImageAdapter.let {
-                        it.itemClickListener = {
-                            val intent = Intent(activity, ImageViewActivity::class.java)
-                            intent.putExtra("image", it)
-                            startActivity(intent)
-                        }
-                        it.deleteImageList.clear()
-                    }
-                }
-                // 삭제 모드 여부
-                listImageAdapter.editMode = it
+        viewModel!!.let { VM ->
+            // 이미지 리스트 초기화
+            VM.imageFileLinks.value?.let { paths ->
+                listImageAdapter = ImageListAdapter(paths)
+                listImageAdapter.deleteImageList = this.viewModel!!.deleteImageList
+                imgListView.layoutManager = GridLayoutManager(activity, 3)
+                imgListView.adapter = listImageAdapter
+            }
+            // 이미지 리스트 갱신
+            VM.imageFileLinks.observe(this, Observer { files ->
                 listImageAdapter.notifyDataSetChanged()
+                if (files.size != 0) noImageView.visibility = View.GONE
+                else noImageView.visibility = View.VISIBLE
             })
-            it.deleteImageListListener = {
-                val list = listImageAdapter.deleteImageList
-                // 내림차순 정렬 후 인덱스 별 삭제
-                Collections.sort(list, Collections.reverseOrder())
-                for (i in 0..list.size - 1) {
-                    it.image.value?.removeAt(list[i])
-                }
 
+            // T: 수정모드, F: 보기모드 UI 갱신
+            VM.editable.observe(this, Observer { editable ->
+                listImageAdapter.let {
+                    if (!editable) it.deleteImageList.clear()
+                    it.editable = editable
+                    // 삭제할 아이템의 체크박스 visible / gone
+                    it.notifyDataSetChanged()
+                }
+            })
+            // 이미지 클릭 리스너 : 보기 모드
+            listImageAdapter.let { adapter ->
+                adapter.itemClickListener = { path ->
+                    val intent = Intent(activity, ImageViewActivity::class.java)
+                    intent.putExtra("image", path)
+                    startActivity(intent)
+                }
+            }
+            // 선택된 이미지 삭제 리스너
+            VM.deleteImageListListener = {
+                // 데이터 삭제
+                VM.Delete_ImageMemoDataList(listImageAdapter.deleteImageList)
+                // 삭제 후 체크박스 해제
                 listImageAdapter.let {
                     it.deleteImageList.clear()
                     it.notifyDataSetChanged()
                 }
-            }
-
-            // 이미지 리스트
-            it.image.value?.let {
-                listImageAdapter = ImageListAdapter(it)
-                listImageAdapter.deleteImageList = viewModel!!.deleteImageList
-                imgListView.layoutManager = GridLayoutManager(activity, 3)
-                imgListView.adapter = listImageAdapter
             }
         }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        viewModel!!.saveDeleteImageList(listImageAdapter.deleteImageList)
+        viewModel!!.deleteImageList = listImageAdapter.deleteImageList
     }
 }

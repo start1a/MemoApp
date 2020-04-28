@@ -20,7 +20,7 @@ class MemoDBMigration : RealmMigration {
     var content: String = "",
     var summary: String = "",
     var date: Date = Date(),
-    var images: RealmList<MemoImageData> = RealmList()
+    var imageFileLinks: RealmList<MemoImageFilePath> = RealmList()
 ) : RealmObject()
          */
         if (oldVersion == 0L) {
@@ -30,7 +30,7 @@ class MemoDBMigration : RealmMigration {
                 .addField("content", String::class.java)
                 .addField("summary", String::class.java)
                 .addField("date", Date::class.java)
-                .addRealmListField("images", schema.get("MemoImageData"))
+                .addRealmListField("imageFileLinks", schema.get("MemoImageFilePath"))
             ++oldVersion
         }
     }
