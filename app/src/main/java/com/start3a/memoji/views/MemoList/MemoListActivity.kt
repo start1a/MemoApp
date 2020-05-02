@@ -1,4 +1,4 @@
-package com.start3a.memoji.views
+package com.start3a.memoji.views.MemoList
 
 import android.content.Intent
 import android.os.Bundle
@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.start3a.memoji.R
 import com.start3a.memoji.viewmodel.MemoListViewModel
+import com.start3a.memoji.views.EditMemo.EditMemoActivity
 import kotlinx.android.synthetic.main.activity_memo_list.*
 
 class MemoListActivity : AppCompatActivity() {
@@ -31,7 +32,9 @@ class MemoListActivity : AppCompatActivity() {
         }
 
         val fragmentTransaction = supportFragmentManager.beginTransaction()
-        fragmentTransaction.replace(R.id.memoListLayout, MemoListFragment())
+        fragmentTransaction.replace(R.id.memoListLayout,
+            MemoListFragment()
+        )
         fragmentTransaction.commit()
     }
 

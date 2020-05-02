@@ -1,4 +1,4 @@
-package com.start3a.memoji.views
+package com.start3a.memoji.views.EditMemo.Image
 
 import android.graphics.BitmapFactory
 import android.os.Bundle
@@ -8,12 +8,12 @@ import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.start3a.memoji.ImageTransform
 import com.start3a.memoji.R
-import com.start3a.memoji.viewmodel.ImageViewModel
+import com.start3a.memoji.viewmodel.ImageDetailViewModel
 import kotlinx.android.synthetic.main.activity_image_view.*
 
 class ImageViewActivity : AppCompatActivity() {
 
-    private var viewModel: ImageViewModel? = null
+    private var viewModel: ImageDetailViewModel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,7 +22,7 @@ class ImageViewActivity : AppCompatActivity() {
 
         viewModel = application!!.let {
             ViewModelProvider(viewModelStore, ViewModelProvider.AndroidViewModelFactory(it))
-                .get(ImageViewModel::class.java)
+                .get(ImageDetailViewModel::class.java)
         }
         viewModel!!.let { vm ->
             vm.imageUri = intent.getStringExtra("imageUri") ?: ""

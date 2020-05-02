@@ -1,4 +1,4 @@
-package com.start3a.memoji.views
+package com.start3a.memoji.views.EditMemo.Image
 
 
 import android.content.Intent
@@ -10,15 +10,14 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
-import com.start3a.memoji.ImageListAdapter
 import com.start3a.memoji.R
-import com.start3a.memoji.viewmodel.DetailViewModel
+import com.start3a.memoji.viewmodel.EditMemoViewModel
 import kotlinx.android.synthetic.main.fragment_memo_image_list.*
 
 class MemoImageFragment : Fragment() {
 
     private lateinit var listImageAdapter: ImageListAdapter
-    private var viewModel: DetailViewModel? = null
+    private var viewModel: EditMemoViewModel? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -36,13 +35,16 @@ class MemoImageFragment : Fragment() {
                 activity!!.viewModelStore,
                 ViewModelProvider.AndroidViewModelFactory(it)
             )
-                .get(DetailViewModel::class.java)
+                .get(EditMemoViewModel::class.java)
         }
 
         viewModel!!.let { VM ->
             // 이미지 리스트 초기화
             VM.imageFileLinks.value?.let { paths ->
-                listImageAdapter = ImageListAdapter(paths)
+                listImageAdapter =
+                    ImageListAdapter(
+                        paths
+                    )
                 listImageAdapter.deleteImageList = this.viewModel!!.deleteImageList
                 imgListView.layoutManager = GridLayoutManager(activity, 3)
                 imgListView.adapter = listImageAdapter

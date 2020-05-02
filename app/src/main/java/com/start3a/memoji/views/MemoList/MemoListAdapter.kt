@@ -1,4 +1,4 @@
-package com.start3a.memoji
+package com.start3a.memoji.views.MemoList
 
 import android.graphics.BitmapFactory
 import android.view.LayoutInflater
@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.start3a.memoji.ImageTransform
+import com.start3a.memoji.R
 import com.start3a.memoji.data.MemoData
 import kotlinx.android.synthetic.main.item_memo.view.*
 
@@ -67,7 +69,12 @@ class MemoListAdapter(private val list: MutableList<MemoData>, val layoutId: Int
         Glide.with(holder.containerView)
             .load(imagePath.run {
                 val prevBitmap = BitmapFactory.decodeFile(imagePath)
-                ImageTransform.getRotatedBitmap(prevBitmap, ImageTransform.getOrientationOfImage(imagePath))
+                ImageTransform.getRotatedBitmap(
+                    prevBitmap,
+                    ImageTransform.getOrientationOfImage(
+                        imagePath
+                    )
+                )
             })
             .error(R.drawable.icon_error)
 }

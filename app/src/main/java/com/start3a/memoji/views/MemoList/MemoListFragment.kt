@@ -1,4 +1,4 @@
-package com.start3a.memoji.views
+package com.start3a.memoji.views.MemoList
 
 
 import android.content.Intent
@@ -12,9 +12,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import com.start3a.memoji.MemoListAdapter
 import com.start3a.memoji.R
 import com.start3a.memoji.viewmodel.MemoListViewModel
+import com.start3a.memoji.views.EditMemo.EditMemoActivity
 import kotlinx.android.synthetic.main.fragment_memo_list.*
 
 class MemoListFragment : Fragment() {
@@ -58,8 +58,16 @@ class MemoListFragment : Fragment() {
     private fun initAdapter() {
         viewModel!!.let { VM ->
             VM.memoListLiveData.value?.let {
-                listAdapterLinear = MemoListAdapter(it, R.layout.item_memo)
-                listAdapterGrid = MemoListAdapter(it, R.layout.item_memo_card)
+                listAdapterLinear =
+                    MemoListAdapter(
+                        it,
+                        R.layout.item_memo
+                    )
+                listAdapterGrid =
+                    MemoListAdapter(
+                        it,
+                        R.layout.item_memo_card
+                    )
             }
             listAdapterLinear.itemClickListener = {
                 setItemClickListener(it)

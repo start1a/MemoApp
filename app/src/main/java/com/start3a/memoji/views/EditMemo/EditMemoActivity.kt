@@ -1,4 +1,4 @@
-package com.start3a.memoji.views
+package com.start3a.memoji.views.EditMemo
 
 import android.Manifest
 import android.app.Activity
@@ -23,7 +23,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModelProvider
 import com.start3a.memoji.R
-import com.start3a.memoji.viewmodel.DetailViewModel
+import com.start3a.memoji.viewmodel.EditMemoViewModel
+import com.start3a.memoji.views.EditMemo.Image.MemoImageFragment
+import com.start3a.memoji.views.EditMemo.Text.MemoTextFragment
 import kotlinx.android.synthetic.main.activity_edit_memo.*
 import kotlinx.android.synthetic.main.content_edit_memo.*
 import kotlinx.coroutines.*
@@ -37,7 +39,7 @@ import kotlin.coroutines.CoroutineContext
 
 class EditMemoActivity : AppCompatActivity(), CoroutineScope {
 
-    private var viewModel: DetailViewModel? = null
+    private var viewModel: EditMemoViewModel? = null
     var dialogInterfaceLoading: DialogInterface? = null
 
     // 코루틴
@@ -72,7 +74,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
 
         viewModel = application!!.let { app ->
             ViewModelProvider(viewModelStore, ViewModelProvider.AndroidViewModelFactory(app))
-                .get(DetailViewModel::class.java).also { VM ->
+                .get(EditMemoViewModel::class.java).also { VM ->
                     id = intent.getStringExtra("memoId")
                     VM.context = applicationContext
                     if (id != null)

@@ -1,10 +1,11 @@
-package com.start3a.memoji
+package com.start3a.memoji.views.EditMemo.Image
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.start3a.memoji.R
 import com.start3a.memoji.data.ImageResource
 import com.start3a.memoji.data.MemoImageFilePath
 import kotlinx.android.synthetic.main.item_image_memo.view.*

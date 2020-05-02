@@ -17,7 +17,7 @@ import kotlinx.coroutines.*
 import java.io.File
 import java.util.*
 
-class DetailViewModel : ViewModel() {
+class EditMemoViewModel : ViewModel() {
 
     // 메모 정보
     // 텍스트

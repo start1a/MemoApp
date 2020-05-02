@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context=".views.MemoListActivity"
+    tools:context=".views.MemoList.MemoListActivity"
     tools:showIn="@layout/activity_memo_list">
 
 </FrameLayout>

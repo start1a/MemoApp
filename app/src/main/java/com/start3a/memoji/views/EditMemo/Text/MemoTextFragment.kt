@@ -1,4 +1,4 @@
-package com.start3a.memoji.views
+package com.start3a.memoji.views.EditMemo.Text
 
 
 import android.content.Context
@@ -14,12 +14,12 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.start3a.memoji.R
-import com.start3a.memoji.viewmodel.DetailViewModel
+import com.start3a.memoji.viewmodel.EditMemoViewModel
 import kotlinx.android.synthetic.main.fragment_memo_text.*
 
 class MemoTextFragment : Fragment() {
 
-    private var viewModel: DetailViewModel? = null
+    private var viewModel: EditMemoViewModel? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -37,7 +37,7 @@ class MemoTextFragment : Fragment() {
                 activity!!.viewModelStore,
                 ViewModelProvider.AndroidViewModelFactory(it)
             )
-                .get(DetailViewModel::class.java)
+                .get(EditMemoViewModel::class.java)
         }
 
         editTitle.addTextChangedListener(object : TextWatcher {

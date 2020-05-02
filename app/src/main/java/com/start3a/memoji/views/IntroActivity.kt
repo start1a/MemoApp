@@ -1,10 +1,11 @@
-package com.start3a.memoji
+package com.start3a.memoji.views
 
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import com.start3a.memoji.views.MemoListActivity
+import com.start3a.memoji.R
+import com.start3a.memoji.views.MemoList.MemoListActivity
 import kotlinx.android.synthetic.main.activity_intro.*
 
 class IntroActivity : AppCompatActivity() {
