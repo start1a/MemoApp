@@ -2,12 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.start3a.memoji">
 
-    <uses-permission android:name="android.permission.INTERNET" /> <!-- android 4.3(max api 18)이하의 버전에서만 write_external_storage 권한이 필요 -->
-    <!-- android 4.4부터는 이 디렉터리를 다른 앱에서 액세스할 수 없음 -->
-    <uses-permission
-        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="18" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
 
     <uses-feature

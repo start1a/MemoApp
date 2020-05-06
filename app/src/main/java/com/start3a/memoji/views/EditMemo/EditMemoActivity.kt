@@ -215,7 +215,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                                 photoFile?.also {
                                     photoURI = FileProvider.getUriForFile(
                                         this,
-                                        "com.example.memoji.fileprovider",
+                                        "com.start3a.memoji.fileprovider",
                                         it
                                     )
                                     takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
