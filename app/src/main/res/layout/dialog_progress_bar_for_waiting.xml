@@ -19,6 +19,6 @@
         android:textStyle="bold"
         android:gravity="center"
         android:textColor="@color/colorPrimary"
-        android:text="설정 중입니다.."/>
+        android:text="@string/loading_for_save"/>
 
 </LinearLayout>

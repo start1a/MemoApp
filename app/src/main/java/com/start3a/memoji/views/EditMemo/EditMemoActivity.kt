@@ -79,6 +79,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                     VM.context = applicationContext
                     if (id != null)
                         VM.Load_MemoData(id!!)
+                    VM.setFragBtn(R.id.action_fragment_text)
                     VM.setEditable(id == null)
                 }
         }
@@ -131,15 +132,15 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         viewModel!!.let {
             it.mMenu = menu
+            it.fragBtnClicked.observe(this, androidx.lifecycle.Observer {
+                viewModel!!.mMenu?.clear()
+                menuView()
+            })
             it.editable.observe(this, androidx.lifecycle.Observer {
                 viewModel!!.mMenu?.clear()
                 supportActionBar?.setDisplayHomeAsUpEnabled(it)
                 if (it) menuInflater.inflate(R.menu.menu_delete_memo, viewModel!!.mMenu)
                 else menuView()
-            })
-            it.fragBtnClicked.observe(this, androidx.lifecycle.Observer {
-                viewModel!!.mMenu?.clear()
-                menuView()
             })
             return true
         }

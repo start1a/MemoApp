@@ -7,7 +7,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.start3a.memoji.ImageManager
 import com.start3a.memoji.Model.MemoDao
-import com.start3a.memoji.R
 import com.start3a.memoji.data.MemoData
 import com.start3a.memoji.data.MemoImageFilePath
 import com.start3a.memoji.data.RealmImageFileLiveData
@@ -53,7 +52,7 @@ class EditMemoViewModel : ViewModel() {
     var mMenu: Menu? = null
     var editable: MutableLiveData<Boolean> = MutableLiveData<Boolean>()
     var fragBtnClicked: MutableLiveData<Int> =
-        MutableLiveData<Int>().apply { value = R.id.action_fragment_text }
+        MutableLiveData<Int>()
 
     // 메모 텍스트 저장 리스너
     lateinit var memoTitleSaveListener: () -> Unit
