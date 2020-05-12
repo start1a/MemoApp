@@ -18,3 +18,9 @@
 
 필요한 권한
 - 카메라
+
+
+## 개발 환경
+
+- Android Studio 3.6.3
+- Realm(DB)
