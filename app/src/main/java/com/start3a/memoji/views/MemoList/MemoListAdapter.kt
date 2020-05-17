@@ -9,7 +9,11 @@ import com.bumptech.glide.Glide
 import com.start3a.memoji.ImageTransform
 import com.start3a.memoji.R
 import com.start3a.memoji.data.MemoData
-import kotlinx.android.synthetic.main.item_memo.view.*
+import kotlinx.android.synthetic.main.item_memo.view.imageMemo
+import kotlinx.android.synthetic.main.item_memo.view.textSummary
+import kotlinx.android.synthetic.main.item_memo.view.textTitle
+import kotlinx.android.synthetic.main.item_memo.view.textDate
+import java.util.*
 
 class MemoListAdapter(private val list: MutableList<MemoData>, val layoutId: Int) :
     RecyclerView.Adapter<MemoViewHolder>() {
@@ -60,6 +64,8 @@ class MemoListAdapter(private val list: MutableList<MemoData>, val layoutId: Int
             holder.containerView.textSummary.visibility = View.VISIBLE
             holder.containerView.textSummary.text = list[position].summary
         } else holder.containerView.textSummary.visibility = View.GONE
+        // 최근 수정 날짜
+        holder.containerView.textDate.text = GetDateFormat(list[position].date)
         // 태그
         // intent 전송
         holder.containerView.tag = list[position].id
@@ -77,4 +83,8 @@ class MemoListAdapter(private val list: MutableList<MemoData>, val layoutId: Int
                 )
             })
             .error(R.drawable.icon_error)
+
+    private fun GetDateFormat(date: Date): String {
+        return java.text.SimpleDateFormat("yy.MM.dd HH:mm").format(date)
+    }
 }

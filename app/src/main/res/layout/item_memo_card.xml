@@ -43,6 +43,13 @@
                 android:textAppearance="?attr/textAppearanceBody2"
                 android:textColor="?android:attr/textColorSecondary" />
 
+            <TextView
+                android:id="@+id/textDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/light_black_text"
+                android:textSize="10sp" />
+
         </LinearLayout>
 
     </LinearLayout>
