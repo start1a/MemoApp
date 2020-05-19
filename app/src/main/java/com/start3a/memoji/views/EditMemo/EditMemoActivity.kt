@@ -202,7 +202,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                     view.findViewById<Button>(R.id.btnShareTextAndImage).setOnClickListener {
 
                         // 두 가지 모두 전송하도록 반드시 이미지가 존재할 경우에만 수행
-                        if (VM.isExistText() || VM.isExistImage()) {
+                        if (VM.isExistText() && VM.isExistImage()) {
                             // 이미지 전송
                             ShareImages()
                             // 텍스트 클립보드 복사
@@ -461,7 +461,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                             add(Uri.parse(item.uri))
                         else add(
                             // FileUriExposedException : exposed beyond app through ClipData.Item.getUri()
-                            // Android 7.0 이후 file:// URI 가 직접 노출되지 않도록 content:// URI를 보내고
+                            // Android 7.0 이후 file:/// URI 가 직접 노출되지 않도록 content:// URI를 보내고
                             // 이에 대해서 임시 액세스 권한을 부여하는 방식으로 변경
                             FileProvider.getUriForFile(
                                 applicationContext,
