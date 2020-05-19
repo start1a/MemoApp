@@ -2,8 +2,7 @@ package com.start3a.memoji.views.EditMemo
 
 import android.Manifest
 import android.app.Activity
-import android.content.DialogInterface
-import android.content.Intent
+import android.content.*
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
@@ -117,7 +116,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
 
     override fun onBackPressed() {
         launch {
-            Loading_SaveMemo()
+            Progress_ProcessingData()
             viewModel!!.Update_MemoData()
             dialogInterfaceLoading?.dismiss()
             super.onBackPressed()
@@ -130,13 +129,13 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        viewModel!!.let {
-            it.mMenu = menu
-            it.fragBtnClicked.observe(this, androidx.lifecycle.Observer {
+        viewModel!!.let { VM ->
+            VM.mMenu = menu
+            VM.fragBtnClicked.observe(this, androidx.lifecycle.Observer {
                 viewModel!!.mMenu?.clear()
                 menuView()
             })
-            it.editable.observe(this, androidx.lifecycle.Observer {
+            VM.editable.observe(this, androidx.lifecycle.Observer {
                 viewModel!!.mMenu?.clear()
                 supportActionBar?.setDisplayHomeAsUpEnabled(it)
                 if (it) menuInflater.inflate(R.menu.menu_delete_memo, viewModel!!.mMenu)
@@ -147,129 +146,197 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
     }
 
     private fun menuView() {
-        when (viewModel!!.fragBtnClicked.value!!) {
-            R.id.action_fragment_text -> menuInflater.inflate(
-                R.menu.menu_text_memo,
-                viewModel!!.mMenu
-            )
-            R.id.action_fragment_image -> menuInflater.inflate(
-                R.menu.menu_image_memo,
-                viewModel!!.mMenu
-            )
+        viewModel!!.fragBtnClicked.value?.let {
+            val menu = viewModel!!.mMenu
+            when (it) {
+                R.id.action_fragment_text -> menuInflater.inflate(
+                    R.menu.menu_text_memo,
+                    menu
+                )
+                R.id.action_fragment_image -> menuInflater.inflate(
+                    R.menu.menu_image_memo,
+                    menu
+                )
+            }
         }
     }
 
     // 메뉴 버튼이 눌림
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        viewModel!!.let { VM ->
+            when (item.itemId) {
 
-        when (item.itemId) {
-
-            R.id.action_edit -> {
-                viewModel!!.editable.value = true
-                viewModel!!.deleteImageListListener = { DialogDeleteMemo() }
-            }
-
-            android.R.id.home -> viewModel!!.editable.value = false
-
-            R.id.action_delete -> DialogDeleteMemo()
-
-            R.id.action_insert_image -> {
-
-                var dialogInterface: DialogInterface? = null
-                val alertDialog = AlertDialog.Builder(this)
-
-                val view = LayoutInflater.from(this).inflate(R.layout.dialog_insert_image, null)
-
-                view.findViewById<Button>(R.id.btnGallery).setOnClickListener {
-                    val intent = Intent(
-                        Intent.ACTION_OPEN_DOCUMENT,
-                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-                    )
-                    intent.type = "image/*"
-                    intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-                    startActivityForResult(
-                        Intent.createChooser(intent, "Select Picture"),
-                        REQUEST_IMAGE_GALLERY
-                    )
+                R.id.action_edit -> {
+                    VM.editable.value = true
+                    VM.deleteImageListListener = { DialogDeleteMemo() }
                 }
 
-                view.findViewById<Button>(R.id.btnCamera).setOnClickListener {
+                android.R.id.home -> VM.editable.value = false
 
-                    val permissionCheck =
-                        ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                R.id.action_share -> {
 
-                    if (permissionCheck == PackageManager.PERMISSION_DENIED) {
-                        val requiredPermissions = arrayOf(
-                            Manifest.permission.CAMERA,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    val alertDialog = AlertDialog.Builder(this)
+                    val view = LayoutInflater.from(this).inflate(R.layout.dialog_share_memo, null)
+
+                    // 텍스트 공유
+                    view.findViewById<Button>(R.id.btnShareText).setOnClickListener {
+                        if (VM.isExistText()) {
+                            val intent = Intent().apply {
+                                action = Intent.ACTION_SEND
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, VM.titleTemp)
+                                putExtra(Intent.EXTRA_TEXT, VM.contentTemp)
+                            }
+                            startActivity(intent)
+                        } else Toast.makeText(this, "공유할 텍스트가 없습니다.", Toast.LENGTH_SHORT).show()
+                    }
+
+                    // 이미지 공유
+                    view.findViewById<Button>(R.id.btnShareImage).setOnClickListener {
+                        if (VM.isExistImage()) {
+                            ShareImages()
+                        } else Toast.makeText(this, "공유할 이미지가 없습니다.", Toast.LENGTH_SHORT).show()
+                    }
+
+                    // 텍스트 + 이미지 공유
+                    view.findViewById<Button>(R.id.btnShareTextAndImage).setOnClickListener {
+
+                        // 두 가지 모두 전송하도록 반드시 이미지가 존재할 경우에만 수행
+                        if (VM.isExistText() || VM.isExistImage()) {
+                            // 이미지 전송
+                            ShareImages()
+                            // 텍스트 클립보드 복사
+                            val clipboardManager =
+                                getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            val clipData = ClipData.newPlainText(
+                                "MemoText",
+                                VM.titleTemp + "\n\n" + VM.contentTemp
+                            )
+                            clipboardManager.setPrimaryClip(clipData)
+                            Toast.makeText(
+                                this,
+                                "텍스트가 클립보드에 복사되었습니다.\n텍스트를 붙여넣기 해주세요.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        } else Toast.makeText(this, "공유할 텍스트 혹은 이미지가 없습니다.", Toast.LENGTH_SHORT)
+                            .show()
+                    }
+
+                    alertDialog
+                        .setView(view)
+                        .setTitle("공유")
+                        .show()
+                }
+
+                R.id.action_delete -> DialogDeleteMemo()
+
+                R.id.action_insert_image -> {
+
+                    var dialogInterface: DialogInterface? = null
+                    val alertDialog = AlertDialog.Builder(this)
+                    val view = LayoutInflater.from(this).inflate(R.layout.dialog_insert_image, null)
+
+                    view.findViewById<Button>(R.id.btnGallery).setOnClickListener {
+                        val intent = Intent(
+                            Intent.ACTION_OPEN_DOCUMENT,
+                            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
                         )
-                        ActivityCompat.requestPermissions(this, requiredPermissions, 1)
+                        intent.type = "image/*"
+                        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                        startActivityForResult(
+                            Intent.createChooser(intent, "Select Picture"),
+                            REQUEST_IMAGE_GALLERY
+                        )
+                    }
 
-                    } else {
-                        Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
-                            takePictureIntent.resolveActivity(packageManager)?.also {
-                                val photoFile: File? = try {
-                                    createImageFile()
-                                } catch (ex: IOException) {
-                                    null
-                                }
-                                photoFile?.also {
-                                    photoURI = FileProvider.getUriForFile(
-                                        this,
-                                        "com.start3a.memoji.fileprovider",
-                                        it
-                                    )
-                                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-                                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAMERA)
+                    view.findViewById<Button>(R.id.btnCamera).setOnClickListener {
+
+                        val permissionCheck =
+                            ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+
+                        if (permissionCheck == PackageManager.PERMISSION_DENIED) {
+                            val requiredPermissions = arrayOf(
+                                Manifest.permission.CAMERA,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE
+                            )
+                            ActivityCompat.requestPermissions(this, requiredPermissions, 1)
+
+                        } else {
+                            Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
+                                takePictureIntent.resolveActivity(packageManager)?.also {
+                                    val photoFile: File? = try {
+                                        createImageFile()
+                                    } catch (ex: IOException) {
+                                        null
+                                    }
+                                    photoFile?.also {
+                                        photoURI = FileProvider.getUriForFile(
+                                            this,
+                                            "com.start3a.memoji.fileprovider",
+                                            it
+                                        )
+                                        takePictureIntent.putExtra(
+                                            MediaStore.EXTRA_OUTPUT,
+                                            photoURI
+                                        )
+                                        startActivityForResult(
+                                            takePictureIntent,
+                                            REQUEST_IMAGE_CAMERA
+                                        )
+                                    }
                                 }
                             }
                         }
+
                     }
 
-                }
+                    view.findViewById<Button>(R.id.btnURL).setOnClickListener {
+                        dialogInterface?.dismiss()
+                        val view = LayoutInflater.from(this).inflate(R.layout.dialog_edit_url, null)
+                        val editUrl = view.findViewById<EditText>(R.id.editURL)
 
-                view.findViewById<Button>(R.id.btnURL).setOnClickListener {
-                    dialogInterface?.dismiss()
-                    val view = LayoutInflater.from(this).inflate(R.layout.dialog_edit_url, null)
-                    val editUrl = view.findViewById<EditText>(R.id.editURL)
+                        dialogInterface = alertDialog
+                            .setView(view)
+                            .setTitle("URL을 입력하세요")
+                            .show()
 
+                        view.findViewById<Button>(R.id.btnURLImageAdd).setOnClickListener {
+                            val url = editUrl.text.toString()
+                            launch(handler) {
+                                Progress_ProcessingData()
+                                if (GetImageFromURL(url)) {
+                                    val list = listOf<Uri>(
+                                        Uri.parse(editUrl.text.toString())
+                                    )
+                                    VM.AddImageList(list)
+                                    Toast.makeText(
+                                        applicationContext,
+                                        "이미지 업로드 완료",
+                                        Toast.LENGTH_SHORT
+                                    )
+                                        .show()
+                                } else Toast.makeText(
+                                    applicationContext,
+                                    "잘못된 URL입니다",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                dialogInterfaceLoading?.dismiss()
+                            }
+                            dialogInterface?.dismiss()
+                        }
+                    }
                     dialogInterface = alertDialog
                         .setView(view)
-                        .setTitle("URL을 입력하세요")
+                        .setTitle("이미지 추가")
                         .show()
-
-                    view.findViewById<Button>(R.id.btnURLImageAdd).setOnClickListener {
-                        val url = editUrl.text.toString()
-                        launch(handler) {
-                            Loading_SaveMemo()
-                            if (GetImageFromURL(url)) {
-                                val list = listOf<Uri>(
-                                    Uri.parse(editUrl.text.toString())
-                                )
-                                viewModel!!.AddImageList(list)
-                                Toast.makeText(applicationContext, "이미지 업로드 완료", Toast.LENGTH_SHORT)
-                                    .show()
-                            } else Toast.makeText(
-                                applicationContext,
-                                "잘못된 URL입니다",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            dialogInterfaceLoading?.dismiss()
-                        }
-                        dialogInterface?.dismiss()
-                    }
                 }
-                dialogInterface = alertDialog
-                    .setView(view)
-                    .setTitle("이미지 추가")
-                    .show()
+
+                R.id.action_delete_image -> VM.setEditable(true)
+
+                R.id.action_delete_image_confirm -> VM.deleteImageListListener()
+
+                else -> return super.onOptionsItemSelected(item)
             }
-
-            R.id.action_delete_image -> viewModel!!.setEditable(true)
-
-            R.id.action_delete_image_confirm -> viewModel!!.deleteImageListListener()
-
-            else -> return super.onOptionsItemSelected(item)
         }
         return true
     }
@@ -290,12 +357,13 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                             if (item != null) list.add(item)
                             else ++numNullBitmap
                         }
-                        if (numNullBitmap > 0)
+                        if (numNullBitmap > 0) {
                             Toast.makeText(
                                 this,
                                 numNullBitmap.toString() + "개의 이미지 파일 불러오기 실패",
                                 Toast.LENGTH_LONG
                             ).show()
+                        }
                         viewModel!!.AddImageList(list)
                     }
                     // 1개
@@ -355,7 +423,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
         }
     }
 
-    private fun Loading_SaveMemo() {
+    private fun Progress_ProcessingData() {
         val alertDialog = AlertDialog.Builder(this)
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_progress_bar_for_waiting, null)
         dialogInterfaceLoading = alertDialog
@@ -377,5 +445,35 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
             con.disconnect()
         }
         return code == 200
+    }
+
+    private fun ShareImages() {
+        val intent = Intent().apply {
+            action = Intent.ACTION_SEND_MULTIPLE
+            type = "image/*"
+            // 이미지 Uri 리스트
+            val list = arrayListOf<Uri>().apply {
+                viewModel!!.imageFileLinks.value?.let { images ->
+                    for (item in images) {
+                        // 저장되지 않은 이미지?
+                        // 원본 파일도 없다면 이미지가 출력되지 않는 에러 발생
+                        if (item.originalPath.isEmpty())
+                            add(Uri.parse(item.uri))
+                        else add(
+                            // FileUriExposedException : exposed beyond app through ClipData.Item.getUri()
+                            // Android 7.0 이후 file:// URI 가 직접 노출되지 않도록 content:// URI를 보내고
+                            // 이에 대해서 임시 액세스 권한을 부여하는 방식으로 변경
+                            FileProvider.getUriForFile(
+                                applicationContext,
+                                "com.start3a.memoji.fileprovider",
+                                File(item.originalPath)
+                            )
+                        )
+                    }
+                }
+            }
+            putParcelableArrayListExtra(Intent.EXTRA_STREAM, list)
+        }
+        startActivity(Intent.createChooser(intent, "Share"))
     }
 }

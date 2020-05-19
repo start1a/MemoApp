@@ -23,7 +23,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="12dp">
 
             <!-- Title, secondary and supporting text -->
             <TextView
@@ -44,6 +44,7 @@
                 android:textColor="?android:attr/textColorSecondary" />
 
             <TextView
+                android:layout_marginTop="4dp"
                 android:id="@+id/textDate"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

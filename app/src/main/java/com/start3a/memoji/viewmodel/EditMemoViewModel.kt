@@ -85,6 +85,15 @@ class EditMemoViewModel : ViewModel() {
         fragBtnClicked.value = type
     }
 
+    fun isExistText(): Boolean {
+        return titleTemp.isNotEmpty() || contentTemp.isNotEmpty()
+    }
+
+    fun isExistImage(): Boolean {
+        return imageFileLinks.value?.size ?: 0 > 0
+    }
+
+
     // 메모 불러오기
     fun Load_MemoData(id: String) {
         memoData = uiMemoDao.selectMemo(id)
@@ -95,7 +104,7 @@ class EditMemoViewModel : ViewModel() {
 
     // 메모 수정
     suspend fun Update_MemoData() {
-        imageFileLinks.value!!.let { images ->
+        imageFileLinks.value?.let { images ->
             // 내용이 존재할 경우
             if (titleTemp.isNotEmpty() || contentTemp.isNotEmpty() || images.size > 0) {
                 // 비동기 처리 : 이미지 저장
@@ -140,7 +149,7 @@ class EditMemoViewModel : ViewModel() {
     // 이미지 파일 생성 후 DB에 데이터 path 저장
     fun SaveImageFile(index: Int) {
         // originalPath == thumbnailPath (동일 데이터)
-        imageFileLinks.value!!.let { images ->
+        imageFileLinks.value?.let { images ->
             val item =
                 GetMemoImageFilePath(Uri.parse(images[index]?.uri))
             // 파일 저장 성공 시
@@ -226,8 +235,8 @@ class EditMemoViewModel : ViewModel() {
         imageFileLinks.value?.let { files ->
             for (index in list) {
                 // 이미지 파일이 존재하면 삭제
-                File(files[index]?.thumbnailPath?:"").delete()
-                File(files[index]?.originalPath?:"").delete()
+                File(files[index]?.thumbnailPath ?: "").delete()
+                File(files[index]?.originalPath ?: "").delete()
                 files.removeAt(index)
             }
         }
