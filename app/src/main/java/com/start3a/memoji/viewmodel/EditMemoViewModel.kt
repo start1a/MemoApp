@@ -6,7 +6,9 @@ import android.view.Menu
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.start3a.memoji.ImageManager
+import com.start3a.memoji.MemoAlarmTool
 import com.start3a.memoji.Model.MemoDao
+import com.start3a.memoji.R
 import com.start3a.memoji.data.MemoData
 import com.start3a.memoji.data.MemoImageFilePath
 import com.start3a.memoji.data.RealmImageFileLiveData
@@ -18,15 +20,36 @@ import java.util.*
 
 class EditMemoViewModel : ViewModel() {
 
-    // 메모 정보
     // 텍스트
     val title: MutableLiveData<String> = MutableLiveData<String>()
     val content: MutableLiveData<String> = MutableLiveData<String>()
+    var titleTemp: String = ""
+    var contentTemp: String = ""
+
+    // 메모 텍스트 저장 리스너
+    lateinit var memoTitleSaveListener: () -> Unit
+    lateinit var memoContentSaveListener: () -> Unit
 
     // 이미지
     val imageFileLinks: RealmImageFileLiveData<MemoImageFilePath> by lazy {
         RealmImageFileLiveData(memoData.imageFileLinks)
     }
+
+    // 이미지 삭제 리스트
+    var deleteDataList: MutableList<Int> = mutableListOf()
+    lateinit var deleteImageListListener: () -> Unit
+
+    // 알람
+    // 현재 알람 리스트
+    val alarmTimeList: MutableLiveData<RealmList<Date>> =
+        MutableLiveData<RealmList<Date>>().apply { value = RealmList() }
+
+    // 초기 등록 알람 리스트
+    // 시스템에 등록된 알람들. 알람 갱신 비교용
+    val alarmTimeListTemp: MutableList<Date> = mutableListOf()
+    lateinit var datePickerShowListener: (index: Int) -> Unit
+    lateinit var deleteAlarmListListener: () -> Unit
+
 
     // 코루틴
     private val MAX_COROUTINE_JOB = 4
@@ -37,28 +60,19 @@ class EditMemoViewModel : ViewModel() {
     lateinit var context: Context
 
     // 임시 메모 정보
+    // 새 메모 : null
+    // 기존 메모 : !null
     var memoId: String? = null
     private var memoData = MemoData()
-
-    // 텍스트 임시 데이터
-    var titleTemp: String = ""
-    var contentTemp: String = ""
-
-    // 이미지 삭제 리스트
-    var deleteImageList: MutableList<Int> = mutableListOf()
-    lateinit var deleteImageListListener: () -> Unit
+    // 알람 리스너
 
     // UI 정보
     var mMenu: Menu? = null
     var editable: MutableLiveData<Boolean> = MutableLiveData<Boolean>()
     var fragBtnClicked: MutableLiveData<Int> =
-        MutableLiveData<Int>()
+        MutableLiveData<Int>().apply { value = R.id.action_fragment_text }
 
-    // 메모 텍스트 저장 리스너
-    lateinit var memoTitleSaveListener: () -> Unit
-    lateinit var memoContentSaveListener: () -> Unit
-
-    // UI 스레드
+    // DB
     private val uiRealm: Realm by lazy {
         Realm.getDefaultInstance()
     }
@@ -93,20 +107,22 @@ class EditMemoViewModel : ViewModel() {
         return imageFileLinks.value?.size ?: 0 > 0
     }
 
-
     // 메모 불러오기
     fun Load_MemoData(id: String) {
         memoData = uiMemoDao.selectMemo(id)
         memoId = id
         titleTemp = memoData.title
         contentTemp = memoData.content
+        alarmTimeList.value = memoData.alarmTimeList
+        alarmTimeListTemp.addAll(memoData.alarmTimeList)
     }
 
     // 메모 수정
-    suspend fun Update_MemoData() {
+    suspend fun AddOrUpdate_MemoData() {
         imageFileLinks.value?.let { images ->
             // 내용이 존재할 경우
             if (titleTemp.isNotEmpty() || contentTemp.isNotEmpty() || images.size > 0) {
+                val alarmTimeListValue = alarmTimeList.value!!
                 // 비동기 처리 : 이미지 저장
                 backScope.launch {
                     // 새 메모일 경우
@@ -137,8 +153,36 @@ class EditMemoViewModel : ViewModel() {
                     }
                 }.join()
 
+                // 기존 알람 삭제
+                for (alarmTime in alarmTimeListTemp) {
+                    // 이전 시간 알람 OR 해당 시간 알람이 제거됨
+                    if (alarmTime.before(Date()) || !alarmTimeListValue.contains(alarmTime))
+                        MemoAlarmTool.deleteAlarm(context, memoData.id, alarmTime)
+                }
+                // 새로 알람 갱신
+                val deleteIndexList = mutableListOf<Int>()
+                for (i in 0 until alarmTimeListValue.size) {
+                    val time = alarmTimeListValue[i]!!
+                    // 현재 이후 알람 AND 신규 생성 알람
+                    if (time.after(Date())) {
+                        if (!alarmTimeListTemp.contains(time)) {
+                            MemoAlarmTool.addAlarm(context, memoData.id, time)
+                        }
+                    }
+                    // 시간이 지난 알람은 제거 리스트에 추가됨
+                    // 나중에 삭제하는 이유 : ConcurrentModificationException
+                    // 어떤 스레드가 Iterator가 반복중인 Collection을 수정하려 할 때 발생
+                    else {
+                       deleteIndexList.add(i)
+                    }
+                }
+                // 지난 알람 삭제
+                for (i in 0 until deleteIndexList.size)
+                    alarmTimeListValue.removeAt(i)
+
+                //  DB에 저장
                 uiMemoDao.addUpdateMemo(
-                    memoData, titleTemp, contentTemp, images
+                    memoData, titleTemp, contentTemp, images, alarmTimeListValue
                 )
             }
             // 내용이 없는 기존 메모이면 DB + 디렉토리 삭제
@@ -164,6 +208,11 @@ class EditMemoViewModel : ViewModel() {
     fun Delete_MemoData() {
         // 기존 메모
         if (!memoId.isNullOrEmpty()) {
+            // 설정된 알람 삭제
+            // alarmTimeListTemp : 메모 초기 알람 상태 보유
+            // 아직 저장하지 않았으므로 초기 알람만 설정되어 있음
+            for (alarmTime in alarmTimeListTemp)
+                MemoAlarmTool.deleteAlarm(context, memoData.id, alarmTime)
             // 디렉토리 제거
             setDirEmpty(context.filesDir.toString() + "/" + memoId)
             // DB에서 제거
@@ -171,7 +220,9 @@ class EditMemoViewModel : ViewModel() {
         }
     }
 
+    // 이미지 저장 디렉토리 삭제 용도
     // 디렉토리 내부 파일 제거 후 해당 디렉토리 제거
+    // 내부 파일이 비워져야 해당 디렉토리가 제거됨
     private fun setDirEmpty(dirName: String) {
         val dir = File(dirName)
         val childFileList = dir.listFiles()
@@ -233,12 +284,44 @@ class EditMemoViewModel : ViewModel() {
         Collections.sort(list, Collections.reverseOrder())
 
         imageFileLinks.value?.let { files ->
-            for (index in list) {
+            for (i in list) {
                 // 이미지 파일이 존재하면 삭제
-                File(files[index]?.thumbnailPath ?: "").delete()
-                File(files[index]?.originalPath ?: "").delete()
-                files.removeAt(index)
+                File(files[i]?.thumbnailPath ?: "").delete()
+                File(files[i]?.originalPath ?: "").delete()
+                files.removeAt(i)
             }
         }
+    }
+
+    fun SetAlarm(time: Date): Boolean {
+        // 동일 알람이 존재하지 않아야 생성됨
+        val isSetable = alarmTimeList.value!!.none { it == time }
+        if (isSetable) {
+            val list = alarmTimeList?.value!!
+            list.add(time)
+            list.sort()
+            alarmTimeList.value = list
+        }
+        return isSetable
+    }
+
+    fun UpdateAlarm(index: Int, time: Date): Boolean {
+        // 동일 알람이 존재하지 않아야 수정됨
+        val isUpdatable = alarmTimeList.value!!.none { it == time }
+        if (isUpdatable) {
+            alarmTimeList.value!![index] = time
+            alarmTimeList.value!!.sort()
+        }
+        return isUpdatable
+    }
+
+    fun DeleteAlarm(list: List<Int>) {
+        // 내림차순 정렬
+        Collections.sort(list, Collections.reverseOrder())
+        val deleteList = alarmTimeList.value!!
+        for (i in list) {
+            deleteList.removeAt(i)
+        }
+        alarmTimeList.value = deleteList
     }
 }

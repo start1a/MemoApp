@@ -21,6 +21,7 @@ class MemoDBMigration : RealmMigration {
     var summary: String = "",
     var date: Date = Date(),
     var imageFileLinks: RealmList<MemoImageFilePath> = RealmList()
+    var alarmTimeList: RealmList<Date> = RealmList()
 ) : RealmObject()
          */
         if (oldVersion == 0L) {
@@ -31,6 +32,7 @@ class MemoDBMigration : RealmMigration {
                 .addField("summary", String::class.java)
                 .addField("date", Date::class.java)
                 .addRealmListField("imageFileLinks", schema.get("MemoImageFilePath"))
+                .addRealmListField("alarmTimeList", Date::class.java)
             ++oldVersion
         }
     }

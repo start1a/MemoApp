@@ -3,7 +3,7 @@
 xmlns:app="http://schemas.android.com/apk/res-auto">
 
 <item
-    android:id="@+id/action_insert_image"
+    android:id="@+id/action_add_image"
     android:title="이미지 추가"
     android:icon="@drawable/ic_insert_photo_black_24dp"
     app:showAsAction="ifRoom"/>

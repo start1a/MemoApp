@@ -18,8 +18,6 @@ class IntroActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_intro)
-
         supportActionBar?.hide()
         // 윈도우 UI 제거
         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LOW_PROFILE or
@@ -28,6 +26,7 @@ class IntroActivity : AppCompatActivity() {
                 View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
                 View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
                 View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+        setContentView(R.layout.activity_intro)
     }
 
     override fun onResume() {

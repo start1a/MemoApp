@@ -45,13 +45,14 @@ class MemoImageFragment : Fragment() {
                     ImageListAdapter(
                         paths
                     )
-                listImageAdapter.deleteImageList = this.viewModel!!.deleteImageList
+                listImageAdapter.deleteImageList = viewModel!!.deleteDataList
                 imgListView.layoutManager = GridLayoutManager(activity, 3)
                 imgListView.adapter = listImageAdapter
             }
             // 이미지 리스트 갱신
             VM.imageFileLinks.observe(this, Observer { files ->
                 listImageAdapter.notifyDataSetChanged()
+                // 이미지가 없음
                 if (files.size != 0) noImageView.visibility = View.GONE
                 else noImageView.visibility = View.VISIBLE
             })
@@ -89,6 +90,7 @@ class MemoImageFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        viewModel!!.deleteImageList = listImageAdapter.deleteImageList
+        // 이미지 삭제 리스트 데이터 유지
+        viewModel!!.deleteDataList = listImageAdapter.deleteImageList
     }
 }

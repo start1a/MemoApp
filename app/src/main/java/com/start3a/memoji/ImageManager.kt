@@ -12,6 +12,7 @@ class ImageManager {
 
     companion object {
 
+        const val TAG = "IMAGE_ERROR_TAG"
         const val THUMBNAIL_PATH = "/ImageThumbnail"
         const val ORIGINAL_PATH = "/ImageOriginal"
         const val VALUE_RESIZE = 200
@@ -76,11 +77,11 @@ class ImageManager {
                 return "$storage/$fileName"
 
             } catch (e: FileNotFoundException) {
-                Log.e("TAG", "FileNotFoundException :  " + e.printStackTrace())
+                Log.e(TAG, "FileNotFoundException :  " + e.printStackTrace())
             } catch (e: IOException) {
-                Log.e("TAG", "IOException : " + e.printStackTrace())
+                Log.e(TAG, "IOException : " + e.printStackTrace())
             } catch (e: SecurityException) {
-                Log.e("TAG", "SecurityException : " + e.printStackTrace())
+                Log.e(TAG, "SecurityException : " + e.printStackTrace())
             }
             return ""
         }
@@ -90,7 +91,7 @@ class ImageManager {
                 val ist = context.contentResolver.openInputStream(uri)
                 return BitmapFactory.decodeStream(ist)
             } catch (e: FileNotFoundException) {
-                Log.e("TAG", "URI OpenStream Failed" + e.printStackTrace())
+                Log.e(TAG, "URI OpenStream Failed" + e.printStackTrace())
                 e.printStackTrace()
                 return null
             }

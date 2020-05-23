@@ -15,7 +15,7 @@ class ImageListAdapter(private val list: MutableList<MemoImageFilePath>) :
     RecyclerView.Adapter<MemoImageViewHolder>() {
 
     var editable: Boolean = false
-    var deleteImageList: MutableList<Int> = mutableListOf()
+    lateinit var deleteImageList: MutableList<Int>
     lateinit var itemClickListener: (imageUri: String, imageOriginal: String) -> Unit
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MemoImageViewHolder {

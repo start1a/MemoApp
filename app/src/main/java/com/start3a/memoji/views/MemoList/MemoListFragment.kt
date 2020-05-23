@@ -106,7 +106,7 @@ class MemoListFragment : Fragment() {
 
     private fun setItemClickListener(id: String) {
         val intent = Intent(activity, EditMemoActivity::class.java)
-        intent.putExtra("memoId", id)
+        intent.putExtra("MEMO_ID", id)
         startActivity(intent)
     }
 }

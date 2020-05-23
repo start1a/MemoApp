@@ -28,45 +28,4 @@
         app:layout_constraintStart_toStartOf="parent"
         app:menu="@menu/menu_bottom_navigation_edit_memo" />
 
-<!--    <FrameLayout-->
-<!--        android:id="@+id/memoDetailLayout"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="0dp"-->
-<!--        app:layout_constraintBottom_toTopOf="@+id/linearLayout"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent">-->
-
-<!--    </FrameLayout>-->
-
-<!--    <LinearLayout-->
-<!--        android:id="@+id/linearLayout"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_gravity="bottom|center"-->
-<!--        android:orientation="horizontal"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent">-->
-
-<!--        <ImageButton-->
-<!--            android:id="@+id/btnFragText"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="40dp"-->
-<!--            android:layout_weight="1"-->
-<!--            android:background="#ffffff"-->
-<!--            android:scaleType="fitCenter"-->
-<!--            android:src="@drawable/ic_mode_edit_black_24dp" />-->
-
-<!--        <ImageButton-->
-<!--            android:id="@+id/btnFragImage"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="40dp"-->
-<!--            android:layout_weight="1"-->
-<!--            android:background="#ffffff"-->
-<!--            android:scaleType="fitCenter"-->
-<!--            android:src="@drawable/ic_insert_photo_black_24dp" />-->
-
-<!--    </LinearLayout>-->
-
 </androidx.constraintlayout.widget.ConstraintLayout>

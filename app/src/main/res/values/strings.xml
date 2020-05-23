@@ -97,6 +97,7 @@
     <string name="action_settings">Settings</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="memo_text">Text</string>
-    <string name="mem_image">Image</string>
+    <string name="memo_image">Image</string>
     <string name="loading_for_save">저장 중입니다..</string>
+    <string name="memo_alarm">Alarm</string>
 </resources>

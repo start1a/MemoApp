@@ -13,5 +13,6 @@ open class MemoData(
     var content: String = "",
     var summary: String = "",
     var date: Date = Date(),
-    var imageFileLinks: RealmList<MemoImageFilePath> = RealmList()
+    var imageFileLinks: RealmList<MemoImageFilePath> = RealmList(),
+    var alarmTimeList: RealmList<Date> = RealmList()
 ) : RealmObject()

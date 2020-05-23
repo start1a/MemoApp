@@ -2,6 +2,8 @@ package com.start3a.memoji.views.EditMemo
 
 import android.Manifest
 import android.app.Activity
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.content.*
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -23,6 +25,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModelProvider
 import com.start3a.memoji.R
 import com.start3a.memoji.viewmodel.EditMemoViewModel
+import com.start3a.memoji.views.EditMemo.Alarm.MemoAlarmFragment
 import com.start3a.memoji.views.EditMemo.Image.MemoImageFragment
 import com.start3a.memoji.views.EditMemo.Text.MemoTextFragment
 import kotlinx.android.synthetic.main.activity_edit_memo.*
@@ -40,6 +43,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
 
     private var viewModel: EditMemoViewModel? = null
     var dialogInterfaceLoading: DialogInterface? = null
+    private val dialogCalendar = Calendar.getInstance()
 
     // 코루틴
     private lateinit var mJob: Job
@@ -52,6 +56,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
     // 프래그먼트
     private lateinit var fragText: MemoTextFragment
     private lateinit var fragImage: MemoImageFragment
+    private lateinit var fragAlarm: MemoAlarmFragment
 
     // 이미지 처리 데이터
     private lateinit var currentPhotoPath: String
@@ -74,31 +79,37 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
         viewModel = application!!.let { app ->
             ViewModelProvider(viewModelStore, ViewModelProvider.AndroidViewModelFactory(app))
                 .get(EditMemoViewModel::class.java).also { VM ->
-                    id = intent.getStringExtra("memoId")
+                    id = intent.getStringExtra("MEMO_ID")
                     VM.context = applicationContext
                     if (id != null)
                         VM.Load_MemoData(id!!)
-                    VM.setFragBtn(R.id.action_fragment_text)
                     VM.setEditable(id == null)
+                    // 액티비티, 프래그먼트 모두 datePicker 호출 가능
+                    VM.datePickerShowListener = { openDateDialog() }
                 }
         }
         fragText = MemoTextFragment()
         fragImage = MemoImageFragment()
+        fragAlarm = MemoAlarmFragment()
         setFragment()
 
+        // 하단 탭 클릭 시
         bottom__navigation_edit_memo.setOnNavigationItemSelectedListener { menu ->
             when (menu.itemId) {
                 // 텍스트
                 R.id.action_fragment_text -> {
-                    // 하단 탭 클릭 시
-                    // 새 메모 : 항상 수정 모드
-                    // 기존 메모 : 항상 보기 모드
                     ReplaceFragment(menu.itemId, viewModel!!.let { VM ->
+                        // 새 메모 : 항상 수정 모드
+                        // 기존 메모 : 항상 보기 모드
                         VM.memoId == null && (VM.titleTemp.isEmpty() || VM.contentTemp.isEmpty())
                     })
                 }
                 // 이미지
                 R.id.action_fragment_image -> {
+                    ReplaceFragment(menu.itemId, false)
+                }
+                // 알람
+                R.id.action_fragment_alarm -> {
                     ReplaceFragment(menu.itemId, false)
                 }
             }
@@ -117,7 +128,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
     override fun onBackPressed() {
         launch {
             Progress_ProcessingData()
-            viewModel!!.Update_MemoData()
+            viewModel!!.AddOrUpdate_MemoData()
             dialogInterfaceLoading?.dismiss()
             super.onBackPressed()
         }
@@ -138,7 +149,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
             VM.editable.observe(this, androidx.lifecycle.Observer {
                 viewModel!!.mMenu?.clear()
                 supportActionBar?.setDisplayHomeAsUpEnabled(it)
-                if (it) menuInflater.inflate(R.menu.menu_delete_memo, viewModel!!.mMenu)
+                if (it) menuInflater.inflate(R.menu.menu_delete_memo, VM.mMenu)
                 else menuView()
             })
             return true
@@ -157,6 +168,10 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                     R.menu.menu_image_memo,
                     menu
                 )
+                R.id.action_fragment_alarm -> menuInflater.inflate(
+                    R.menu.menu_alarm_memo,
+                    menu
+                )
             }
         }
     }
@@ -166,12 +181,9 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
         viewModel!!.let { VM ->
             when (item.itemId) {
 
-                R.id.action_edit -> {
-                    VM.editable.value = true
-                    VM.deleteImageListListener = { DialogDeleteMemo() }
-                }
+                R.id.action_edit -> VM.setEditable(true)
 
-                android.R.id.home -> VM.editable.value = false
+                android.R.id.home -> VM.setEditable(false)
 
                 R.id.action_share -> {
 
@@ -230,7 +242,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
 
                 R.id.action_delete -> DialogDeleteMemo()
 
-                R.id.action_insert_image -> {
+                R.id.action_add_image -> {
 
                     var dialogInterface: DialogInterface? = null
                     val alertDialog = AlertDialog.Builder(this)
@@ -333,7 +345,20 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
 
                 R.id.action_delete_image -> VM.setEditable(true)
 
-                R.id.action_delete_image_confirm -> VM.deleteImageListListener()
+                R.id.action_delete_data -> {
+                    when (VM.fragBtnClicked.value) {
+                        R.id.action_fragment_text -> DialogDeleteMemo()
+                        R.id.action_fragment_image -> VM.deleteImageListListener()
+                        // R.id.action_fragment_alarm
+                        else -> {
+                            VM.deleteAlarmListListener()
+                        }
+                    }
+                }
+
+                R.id.action_add_alarm -> openDateDialog()
+
+                R.id.action_delete_alarm -> VM.setEditable(true)
 
                 else -> return super.onOptionsItemSelected(item)
             }
@@ -405,6 +430,11 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                     R.id.memoDetailLayout,
                     fragImage
                 ).commit()
+            R.id.action_fragment_alarm ->
+                supportFragmentManager.beginTransaction().replace(
+                    R.id.memoDetailLayout,
+                    fragAlarm
+                ).commit()
         }
     }
 
@@ -475,5 +505,49 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
             putParcelableArrayListExtra(Intent.EXTRA_STREAM, list)
         }
         startActivity(Intent.createChooser(intent, "Share"))
+    }
+
+    // 알람 추가용 날짜 다이얼로그
+    // 디폴트 매개변수 : 새 알람 추가
+    // 새로운 매개변수 : 기존 알람 시간 변경
+    private fun openDateDialog(index: Int = -1, date: Date = Date()) {
+        val datePickerDialog = DatePickerDialog(this)
+        dialogCalendar.time = date
+        datePickerDialog.setOnDateSetListener { view, year, month, dayOfMonth ->
+            dialogCalendar.set(year, month, dayOfMonth)
+            openTimeDialog(index)
+        }
+        datePickerDialog.show()
+    }
+
+    private fun openTimeDialog(index: Int) {
+        val timePickerDialog = TimePickerDialog(
+            this,
+            TimePickerDialog.OnTimeSetListener { view, hourOfDay, minute ->
+                dialogCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                dialogCalendar.set(Calendar.MINUTE, minute)
+
+                if (!dialogCalendar.time.after(Date())) {
+                    Toast.makeText(this, "현재 이후의 시간만 등록할 수 있습니다", Toast.LENGTH_SHORT).show()
+                    return@OnTimeSetListener
+                }
+                // 새 알람 추가
+                if (index == -1) {
+                    viewModel?.SetAlarm(dialogCalendar.time)?.let { isSuccess ->
+                        if (!isSuccess)
+                            Toast.makeText(this, "동일한 알람이 존재합니다", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                // 기존 알람 내용 수정
+                else {
+                    viewModel?.UpdateAlarm(index, dialogCalendar.time)?.let { isSuccess ->
+                        if (!isSuccess)
+                            Toast.makeText(this, "동일한 알람이 존재하여 변경되지 않았습니다", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            },
+            0, 0, false
+        )
+        timePickerDialog.show()
     }
 }
