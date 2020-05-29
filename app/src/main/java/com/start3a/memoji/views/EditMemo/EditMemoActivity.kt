@@ -508,8 +508,8 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
     }
 
     // 알람 추가용 날짜 다이얼로그
-    // 디폴트 매개변수 : 새 알람 추가
-    // 새로운 매개변수 : 기존 알람 시간 변경
+    // 디폴트 매개변수 : 새 알람 추가용
+    // 새로운 매개변수 : 기존 알람 시간 변경용
     private fun openDateDialog(index: Int = -1, date: Date = Date()) {
         val datePickerDialog = DatePickerDialog(this)
         dialogCalendar.time = date
@@ -546,7 +546,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                     }
                 }
             },
-            0, 0, false
+            0, 0, true
         )
         timePickerDialog.show()
     }

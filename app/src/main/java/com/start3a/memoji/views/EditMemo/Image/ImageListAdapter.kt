@@ -50,8 +50,8 @@ class ImageListAdapter(private val list: MutableList<MemoImageFilePath>) :
     override fun onBindViewHolder(holder: MemoImageViewHolder, position: Int) {
         // 이미지
         Glide.with(holder.containerView)
-            .load(list[position].uri)
-            .error(AlternativeImage(holder, list[position].thumbnailPath))
+            .load(list[position].thumbnailPath)
+            .error(AlternativeImage(holder, list[position].uri))
             .override(400)
             .into(holder.containerView.imageItem)
 
@@ -70,4 +70,5 @@ class ImageListAdapter(private val list: MutableList<MemoImageFilePath>) :
         Glide.with(holder.containerView)
             .load(imagePath)
             .error(R.drawable.icon_error)
+            .override(400)
 }

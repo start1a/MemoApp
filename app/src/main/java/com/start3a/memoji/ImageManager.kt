@@ -13,6 +13,7 @@ class ImageManager {
     companion object {
 
         const val TAG = "IMAGE_ERROR_TAG"
+        const val UNSAVABLE_IMAGE = "Unsavable_Image"
         const val THUMBNAIL_PATH = "/ImageThumbnail"
         const val ORIGINAL_PATH = "/ImageOriginal"
         const val VALUE_RESIZE = 200

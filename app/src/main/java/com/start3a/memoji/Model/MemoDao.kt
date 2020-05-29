@@ -49,12 +49,6 @@ class MemoDao(private val realm: Realm) {
         }
     }
 
-    fun getActiveAlarm(): RealmResults<MemoData> {
-        return realm.where(MemoData::class.java)
-            .greaterThan("alarmTimeList", Date())
-            .findAll()
-    }
-
     fun deleteMemo(id: String) {
         realm.executeTransaction {
             it.where(MemoData::class.java)
