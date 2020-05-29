@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -33,8 +34,7 @@ class MemoTextFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
 
         viewModel = activity!!.application!!.let {
-            ViewModelProvider(
-                activity!!.viewModelStore,
+            ViewModelProvider(activity!!.viewModelStore,
                 ViewModelProvider.AndroidViewModelFactory(it)
             )
                 .get(EditMemoViewModel::class.java)
@@ -42,27 +42,25 @@ class MemoTextFragment : Fragment() {
 
         editTitle.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
-                viewModel!!.memoTitleSaveListener()
+                viewModel!!.titleTemp = editTitle.text.toString()
             }
-
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
 
         editContent.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
-                viewModel!!.memoContentSaveListener()
+                viewModel!!.contentTemp = editContent.text.toString()
             }
-
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
 
-        viewModel!!.let {
-            it.title.observe(this, Observer { editTitle.setText(it) })
-            it.content.observe(this, Observer { editContent.setText(it) })
+        viewModel!!.let { VM ->
+            VM.title.observe(this, Observer { editTitle.setText(it) })
+            VM.content.observe(this, Observer { editContent.setText(it) })
             // T: 수정모드, F: 보기모드
-            it.editable.observe(this, Observer { mode ->
+            VM.editable.observe(this, Observer { mode ->
                 setEditMode(editTitle, mode)
                 setEditMode(editContent, mode)
 
@@ -77,10 +75,19 @@ class MemoTextFragment : Fragment() {
                     editContent.hideKeyboard()
                 }
             })
-            it.memoTitleSaveListener = { it.titleTemp = editTitle.text.toString() }
-            it.memoContentSaveListener = { it.contentTemp = editContent.text.toString() }
+            // 컨텐츠 모두 선택
+            VM.AllContentSelectListener = {
+                AlertDialog.Builder(activity!!)
+                    .setTitle("제목과 내용을 모두 삭제하시겠습니까?")
+                    .setNegativeButton("취소", null)
+                    .setPositiveButton("확인") { _, _ ->
+                        VM.titleTemp = ""
+                        VM.contentTemp = ""
+                        VM.saveText()
+                    }.show()
+            }
             // 기존의 메모 로드
-            it.saveText()
+            VM.saveText()
         }
     }
 

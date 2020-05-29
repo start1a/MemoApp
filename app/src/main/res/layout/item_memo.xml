@@ -13,8 +13,8 @@
         android:layout_width="130dp"
         android:layout_height="0dp"
         android:adjustViewBounds="true"
-        android:scaleType="centerCrop"
         android:paddingEnd="10dp"
+        android:scaleType="centerCrop"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -42,6 +42,14 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/imageMemo"
         app:layout_constraintTop_toBottomOf="@+id/textTitle" />
+
+    <ImageView
+        android:id="@+id/alarm_exist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/imageMemo"
+        app:srcCompat="@drawable/ic_alarm_exist_24dp" />
 
     <TextView
         android:id="@+id/textDate"

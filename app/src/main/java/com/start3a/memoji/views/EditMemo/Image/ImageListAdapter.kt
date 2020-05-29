@@ -52,7 +52,6 @@ class ImageListAdapter(private val list: MutableList<MemoImageFilePath>) :
         Glide.with(holder.containerView)
             .load(list[position].thumbnailPath)
             .error(AlternativeImage(holder, list[position].uri))
-            .override(400)
             .into(holder.containerView.imageItem)
 
         // 태그

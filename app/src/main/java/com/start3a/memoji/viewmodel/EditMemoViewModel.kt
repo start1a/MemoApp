@@ -29,10 +29,6 @@ class EditMemoViewModel : ViewModel() {
     var titleTemp: String = ""
     var contentTemp: String = ""
 
-    // 메모 텍스트 저장 리스너
-    lateinit var memoTitleSaveListener: () -> Unit
-    lateinit var memoContentSaveListener: () -> Unit
-
     // 이미지
     val imageFileLinks: RealmImageFileLiveData<MemoImageFilePath> by lazy {
         RealmImageFileLiveData(memoData.imageFileLinks)
@@ -69,15 +65,16 @@ class EditMemoViewModel : ViewModel() {
     var memoId: String? = null
     private var memoData = MemoData()
 
-    // 데이터 삭제 인덱스 리스트
-    // 화면 갱신 시 데이터 유지
-    var deleteDataList: MutableList<Int> = mutableListOf()
-
     // UI 정보
     var mMenu: Menu? = null
     var editable: MutableLiveData<Boolean> = MutableLiveData<Boolean>()
     var fragBtnClicked: MutableLiveData<Int> =
         MutableLiveData<Int>().apply { value = R.id.action_fragment_text }
+    // 데이터 삭제 인덱스 리스트
+    // 화면 갱신 시 데이터 유지
+    var deleteDataList: MutableList<Int> = mutableListOf()
+    // 해당 탭의 컨텐츠 삭제 메뉴 리스너
+    lateinit var AllContentSelectListener: () -> Unit
 
     // DB
     private val mRealm: Realm by lazy {

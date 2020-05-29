@@ -75,6 +75,19 @@ class MemoImageFragment : Fragment() {
                     startActivity(intent)
                 }
             }
+
+            // 이미지 삭제 대상 모두 체크
+            VM.AllContentSelectListener = {
+                val list = listImageAdapter.deleteImageList
+                val sizeImageList = VM.imageFileLinks.value!!.size
+                // 내림차순 정렬에 유리하도록 거꾸로 추가
+                for (i in sizeImageList - 1 downTo 0) {
+                    if (!list.contains(i))
+                        list.add(i)
+                }
+                listImageAdapter.notifyDataSetChanged()
+            }
+
             // 선택된 이미지 삭제 리스너
             VM.deleteImageListListener = {
                 // 데이터 삭제

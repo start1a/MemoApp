@@ -304,15 +304,15 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
 
                     view.findViewById<Button>(R.id.btnURL).setOnClickListener {
                         dialogInterface?.dismiss()
-                        val view = LayoutInflater.from(this).inflate(R.layout.dialog_edit_url, null)
-                        val editUrl = view.findViewById<EditText>(R.id.editURL)
+                        val viewUrl = LayoutInflater.from(this).inflate(R.layout.dialog_edit_url, null)
+                        val editUrl = viewUrl.findViewById<EditText>(R.id.editURL)
 
                         dialogInterface = alertDialog
-                            .setView(view)
+                            .setView(viewUrl)
                             .setTitle("URL을 입력하세요")
                             .show()
 
-                        view.findViewById<Button>(R.id.btnURLImageAdd).setOnClickListener {
+                        viewUrl.findViewById<Button>(R.id.btnURLImageAdd).setOnClickListener {
                             val url = editUrl.text.toString()
                             launch(handler) {
                                 Progress_ProcessingData()
@@ -344,6 +344,8 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                 }
 
                 R.id.action_delete_image -> VM.setEditable(true)
+
+                R.id.action_delete_sweep_content -> VM.AllContentSelectListener()
 
                 R.id.action_delete_data -> {
                     when (VM.fragBtnClicked.value) {

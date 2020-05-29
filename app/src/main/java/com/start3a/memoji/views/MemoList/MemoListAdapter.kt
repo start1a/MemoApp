@@ -9,10 +9,7 @@ import com.bumptech.glide.Glide
 import com.start3a.memoji.ImageTransform
 import com.start3a.memoji.R
 import com.start3a.memoji.data.MemoData
-import kotlinx.android.synthetic.main.item_memo.view.imageMemo
-import kotlinx.android.synthetic.main.item_memo.view.textSummary
-import kotlinx.android.synthetic.main.item_memo.view.textTitle
-import kotlinx.android.synthetic.main.item_memo.view.textDate
+import kotlinx.android.synthetic.main.item_memo.view.*
 import java.util.*
 
 class MemoListAdapter(private val list: MutableList<MemoData>, val layoutId: Int) :
@@ -49,6 +46,12 @@ class MemoListAdapter(private val list: MutableList<MemoData>, val layoutId: Int
                 .override(400)
                 .into(holder.containerView.imageMemo)
         } else holder.containerView.imageMemo.visibility = View.GONE
+
+        // 알람 존재 여부
+        if (list[position].alarmTimeList.size > 0)
+            holder.containerView.alarm_exist.visibility = View.VISIBLE
+        else
+            holder.containerView.alarm_exist.visibility = View.GONE
 
         // 텍스트
         // 제목

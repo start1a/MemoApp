@@ -1,10 +1,10 @@
-<com.google.android.material.card.MaterialCardView
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/card_memo"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -30,26 +30,44 @@
                 android:id="@+id/textTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="18sp"
-                android:textAppearance="?attr/textAppearanceHeadline6" />
+                android:textAppearance="?attr/textAppearanceHeadline6"
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/textSummary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:textSize="15sp"
                 android:lines="3"
                 android:textAppearance="?attr/textAppearanceBody2"
-                android:textColor="?android:attr/textColorSecondary" />
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="15sp" />
 
-            <TextView
-                android:layout_marginTop="4dp"
-                android:id="@+id/textDate"
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/light_black_text"
-                android:textSize="10sp" />
+                android:layout_marginTop="4dp">
+
+                <ImageView
+                    android:id="@+id/alarm_exist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_alarm_exist_24dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/textDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/light_black_text"
+                    android:textSize="10sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
         </LinearLayout>
 
