@@ -17,14 +17,14 @@ class MemoDao(private val realm: Realm) {
             .findAll()
     }
 
-    fun selectMemo(id: String): MemoData {
+    fun getMemoByID(id: String): MemoData {
         val data = realm.where(MemoData::class.java)
             .equalTo("id", id)
             .findFirst() as MemoData
         return realm.copyFromRealm(data)
     }
 
-    fun addUpdateMemo(
+    fun saveMemo(
         memoData: MemoData,
         title: String,
         content: String,
@@ -69,6 +69,31 @@ class MemoDao(private val realm: Realm) {
                     break
                 }
             }
+        }
+    }
+
+    fun getAllMemoAlarms(): MutableList<MemoData> {
+        return mutableListOf<MemoData>().apply {
+            for (memo in getAllMemos()) {
+                if (memo.alarmTimeList.size > 0)
+                    add(memo)
+            }
+        }
+    }
+
+
+    fun SaveFireStoreMemoData(memos: MutableList<MemoData>) {
+        realm.executeTransaction {
+            for (memo in memos) {
+                it.copyToRealmOrUpdate(memo)
+            }
+        }
+    }
+
+    fun clearDatabase() {
+        // 로컬 DB 데이터 비우기
+        realm.executeTransaction {
+            getAllMemos().deleteAllFromRealm()
         }
     }
 }

@@ -55,7 +55,7 @@ class MemoAlarmTool : BroadcastReceiver() {
                 val time = intent.getLongExtra("ALARM_TIME", 0)
                 val realm = Realm.getDefaultInstance()
                 val memoDao = MemoDao(realm)
-                val memoData = memoDao.selectMemo(memoId)
+                val memoData = memoDao.getMemoByID(memoId)
 
                 // 해당 알람 DB 제거
                 memoDao.deleteAlarmMemo(memoId, Date(time))
@@ -105,7 +105,6 @@ class MemoAlarmTool : BroadcastReceiver() {
                             addAlarm(context, memo.id, time)
             }
         }
-
     }
 
 }

@@ -10,6 +10,7 @@ import com.start3a.memoji.ImageTransform
 import com.start3a.memoji.R
 import com.start3a.memoji.data.MemoData
 import kotlinx.android.synthetic.main.item_memo.view.*
+import java.text.SimpleDateFormat
 import java.util.*
 
 class MemoListAdapter(private val list: MutableList<MemoData>, val layoutId: Int) :
@@ -35,47 +36,53 @@ class MemoListAdapter(private val list: MutableList<MemoData>, val layoutId: Int
     }
 
     override fun onBindViewHolder(holder: MemoViewHolder, position: Int) {
-        // 이미지가 없으면 뷰를 제거
-        if (list[position].imageFileLinks.size > 0) {
-            holder.containerView.imageMemo.visibility = View.VISIBLE
-            // 썸네일 이미지
-            val image = list[position].imageFileLinks[0]!!
-            Glide.with(holder.containerView)
-                .load(image.uri)
-                .error(AlternativeThumbnailImage(holder, image.thumbnailPath))
-                .override(400)
-                .into(holder.containerView.imageMemo)
-        } else holder.containerView.imageMemo.visibility = View.GONE
+        holder.containerView.run {
 
-        // 알람 존재 여부
-        if (list[position].alarmTimeList.size > 0)
-            holder.containerView.alarm_exist.visibility = View.VISIBLE
-        else
-            holder.containerView.alarm_exist.visibility = View.GONE
+            // 이미지가 없으면 뷰를 제거
+            if (list[position].imageFileLinks.size > 0) {
+                imageMemo.visibility = View.VISIBLE
+                // 썸네일 이미지
+                val image = list[position].imageFileLinks[0]!!
 
-        // 텍스트
-        // 제목
-        if (list[position].title.isNotEmpty()) {
-            holder.containerView.textTitle.visibility = View.VISIBLE
+                Glide.with(this)
+                    .load(image.uri)
+                    .error(AlternativeThumbnailImage(this, image.thumbnailPath))
+                    .override(400)
+                    .into(imageMemo)
+            } else
+                imageMemo.visibility = View.GONE
 
-            if (list[position].title.length > 20)
-                holder.containerView.textTitle.text = list[position].title.substring(0..25) + ".."
-            else holder.containerView.textTitle.text = list[position].title
-        } else holder.containerView.textTitle.visibility = View.GONE
-        // 내용
-        if (list[position].content.isNotEmpty()) {
-            holder.containerView.textSummary.visibility = View.VISIBLE
-            holder.containerView.textSummary.text = list[position].summary
-        } else holder.containerView.textSummary.visibility = View.GONE
-        // 최근 수정 날짜
-        holder.containerView.textDate.text = GetDateFormat(list[position].date)
-        // 태그
-        // intent 전송
-        holder.containerView.tag = list[position].id
+            // 알람 존재 여부
+            if (list[position].alarmTimeList.size > 0)
+                alarm_exist.visibility = View.VISIBLE
+            else
+                alarm_exist.visibility = View.GONE
+
+            // 텍스트
+            // 제목
+            if (list[position].title.isNotEmpty()) {
+                textTitle.visibility = View.VISIBLE
+
+                if (list[position].title.length > 25) {
+                    textTitle.text = list[position].title.substring(0..25)
+                    textTitle.append("..")
+                } else textTitle.text = list[position].title
+            } else textTitle.visibility = View.GONE
+            // 내용
+            if (list[position].content.isNotEmpty()) {
+                textSummary.visibility = View.VISIBLE
+                textSummary.text = list[position].summary
+            } else textSummary.visibility = View.GONE
+            // 최근 수정 날짜
+            textDate.text = GetDateFormat(list[position].date)
+            // 태그
+            // intent 전송
+            tag = list[position].id
+        }
     }
 
-    private fun AlternativeThumbnailImage(holder: MemoViewHolder, imagePath: String) =
-        Glide.with(holder.containerView)
+    private fun AlternativeThumbnailImage(view: View, imagePath: String) =
+        Glide.with(view)
             .load(imagePath.run {
                 val prevBitmap = BitmapFactory.decodeFile(imagePath)
                 ImageTransform.getRotatedBitmap(
@@ -88,6 +95,6 @@ class MemoListAdapter(private val list: MutableList<MemoData>, val layoutId: Int
             .error(R.drawable.icon_error)
 
     private fun GetDateFormat(date: Date): String {
-        return java.text.SimpleDateFormat("yy.MM.dd HH:mm").format(date)
+        return SimpleDateFormat("yy.MM.dd HH:mm").format(date)
     }
 }

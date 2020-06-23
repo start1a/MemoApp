@@ -1,12 +1,16 @@
 package com.start3a.memoji.views.MemoList
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import com.firebase.ui.auth.AuthUI
+import com.google.firebase.auth.FirebaseAuth
 import com.start3a.memoji.R
+import com.start3a.memoji.repository.MemoRepository
 import com.start3a.memoji.viewmodel.MemoListViewModel
 import com.start3a.memoji.views.EditMemo.EditMemoActivity
 import kotlinx.android.synthetic.main.activity_memo_list.*
@@ -14,6 +18,12 @@ import kotlinx.android.synthetic.main.activity_memo_list.*
 class MemoListActivity : AppCompatActivity() {
 
     private var viewModel: MemoListViewModel? = null
+
+    private val AUTH_SIGN_IN = 9001
+
+    private val providers = arrayListOf(
+        AuthUI.IdpConfig.GoogleBuilder().build()
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,19 +33,31 @@ class MemoListActivity : AppCompatActivity() {
 
         viewModel = application!!.let {
             ViewModelProvider(viewModelStore, ViewModelProvider.AndroidViewModelFactory(it))
-                .get(MemoListViewModel::class.java)
+                .get(MemoListViewModel::class.java).also { VM ->
+                    VM.context = applicationContext
+                }
         }
 
+        // 새 메모 버튼
         fab.setOnClickListener {
             val intent = Intent(applicationContext, EditMemoActivity::class.java)
             startActivity(intent)
         }
 
+        // 프래그먼트
         val fragmentTransaction = supportFragmentManager.beginTransaction()
-        fragmentTransaction.replace(R.id.memoListLayout,
+        fragmentTransaction.replace(
+            R.id.memoListLayout,
             MemoListFragment()
         )
         fragmentTransaction.commit()
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        if (shouldStartSignIn())
+            startSignIn()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -66,8 +88,49 @@ class MemoListActivity : AppCompatActivity() {
                     }
                 }
 
+                R.id.action_sign_out -> {
+                    viewModel!!.isSingingIn = false
+                    AuthUI.getInstance().signOut(this)
+                    MemoRepository.userID = null
+                    startSignIn()
+                    // Local DB 비우기
+                    viewModel!!.signOutUser()
+                }
             }
             return true
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == AUTH_SIGN_IN) {
+            if (resultCode != Activity.RESULT_OK && shouldStartSignIn()) {
+                startSignIn()
+            } else {
+                successSignIn()
+            }
+        }
+    }
+
+    private fun shouldStartSignIn(): Boolean {
+        return (!viewModel!!.isSingingIn && FirebaseAuth.getInstance().currentUser == null)
+    }
+
+    private fun startSignIn() {
+        val intent = AuthUI.getInstance().createSignInIntentBuilder()
+            .setAvailableProviders(providers)
+            .setIsSmartLockEnabled(false)
+            .setTheme(R.style.AppTheme_NoActionBar)
+            .build()
+
+        startActivityForResult(intent, AUTH_SIGN_IN)
+    }
+
+    private fun successSignIn() {
+        viewModel!!.isSingingIn = true
+        MemoRepository.userID = FirebaseAuth.getInstance().currentUser?.email
+        // 사용자 데이터 불러오기
+        viewModel!!.getUserData()
     }
 }

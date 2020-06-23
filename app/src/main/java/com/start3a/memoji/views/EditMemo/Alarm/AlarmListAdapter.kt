@@ -49,18 +49,21 @@ class AlarmListAdapter(private val list: MutableList<Date>) :
     }
 
     override fun onBindViewHolder(holder: MemoAlarmViewHolder, position: Int) {
-        // 삭제 라디오 버튼
-        if (editable) holder.containerView.deleteRadioButton.visibility = View.VISIBLE
-        else holder.containerView.deleteRadioButton.visibility = View.GONE
-        holder.containerView.deleteRadioButton.isChecked = deleteAlarmList.contains(position)
-        // 시간
-        holder.containerView.textTime.text = SimpleDateFormat("hh:mm").format(list[position])
-        // 날짜
-        holder.containerView.textDate.text = SimpleDateFormat("yyyy.MM.dd").format(list[position])
-        // on / off (추가 예정)
+        holder.containerView.run {
+            // 삭제 라디오 버튼
+            if (editable) deleteRadioButton.visibility = View.VISIBLE
+            else deleteRadioButton.visibility = View.GONE
+            deleteRadioButton.isChecked = deleteAlarmList.contains(position)
+            // 시간
+            textTime.text = SimpleDateFormat("hh:mm").format(list[position])
+            // 날짜
+            textDate.text =
+                SimpleDateFormat("yyyy.MM.dd").format(list[position])
+            // on / off (추가 예정)
 
 
-        // 태그
-        holder.containerView.tag = position
+            // 태그
+            tag = position
+        }
     }
 }

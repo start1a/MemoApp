@@ -48,21 +48,23 @@ class ImageListAdapter(private val list: MutableList<MemoImageFilePath>) :
     }
 
     override fun onBindViewHolder(holder: MemoImageViewHolder, position: Int) {
-        // 이미지
-        Glide.with(holder.containerView)
-            .load(list[position].thumbnailPath)
-            .error(AlternativeImage(holder, list[position].uri))
-            .into(holder.containerView.imageItem)
+        holder.containerView.run {
+            // 이미지
+            Glide.with(this)
+                .load(list[position].thumbnailPath)
+                .error(AlternativeImage(holder, list[position].uri))
+                .into(imageItem)
 
-        // 태그
-        val imageInfo = ImageResource(list[position].uri, list[position].originalPath, position)
-        holder.containerView.tag = imageInfo
+            // 태그
+            val imageInfo = ImageResource(list[position].uri, list[position].originalPath, position)
+            tag = imageInfo
 
-        // 삭제 체크박스
-        holder.containerView.deleteCheck.isChecked =
-            deleteImageList.contains(imageInfo.selectedIndex)
-        if (editable) holder.containerView.deleteCheck.visibility = View.VISIBLE
-        else holder.containerView.deleteCheck.visibility = View.GONE
+            // 삭제 체크박스
+            deleteCheck.isChecked =
+                deleteImageList.contains(imageInfo.selectedIndex)
+            if (editable) deleteCheck.visibility = View.VISIBLE
+            else deleteCheck.visibility = View.GONE
+        }
     }
 
     private fun AlternativeImage(holder: MemoImageViewHolder, imagePath: String) =

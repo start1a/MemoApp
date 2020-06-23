@@ -8,10 +8,9 @@
         android:icon="@drawable/ic_view_grid_black_24dp"
         app:showAsAction="ifRoom"/>
 
-<!--    <item-->
-<!--        android:id="@+id/action_settings"-->
-<!--        android:title="설정"-->
-<!--        android:icon="@drawable/ic_view_grid_black_24dp"-->
-<!--        app:showAsAction="ifRoom"/>-->
+    <item
+        android:id="@+id/action_sign_out"
+        android:title="로그아웃"
+        app:showAsAction="never"/>
 
 </menu>

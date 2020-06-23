@@ -7,12 +7,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.start3a.memoji.ImageManager
 import com.start3a.memoji.MemoAlarmTool
-import com.start3a.memoji.Model.MemoDao
 import com.start3a.memoji.R
 import com.start3a.memoji.data.MemoData
 import com.start3a.memoji.data.MemoImageFilePath
 import com.start3a.memoji.data.RealmImageFileLiveData
-import io.realm.Realm
+import com.start3a.memoji.repository.MemoRepository
 import io.realm.RealmList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -60,8 +59,7 @@ class EditMemoViewModel : ViewModel() {
     lateinit var context: Context
 
     // 임시 메모 정보
-    // 새 메모 : null
-    // 기존 메모 : !null
+    // 새 메모 = null 기존 메모 = !null
     var memoId: String? = null
     private var memoData = MemoData()
 
@@ -70,24 +68,21 @@ class EditMemoViewModel : ViewModel() {
     var editable: MutableLiveData<Boolean> = MutableLiveData<Boolean>()
     var fragBtnClicked: MutableLiveData<Int> =
         MutableLiveData<Int>().apply { value = R.id.action_fragment_text }
+
     // 데이터 삭제 인덱스 리스트
     // 화면 갱신 시 데이터 유지
     var deleteDataList: MutableList<Int> = mutableListOf()
+
     // 해당 탭의 컨텐츠 삭제 메뉴 리스너
     lateinit var AllContentSelectListener: () -> Unit
 
-    // DB
-    private val mRealm: Realm by lazy {
-        Realm.getDefaultInstance()
-    }
-    private val mMemoDao: MemoDao by lazy {
-        MemoDao(mRealm)
-    }
+    // repository
+    private val repository = MemoRepository()
 
     override fun onCleared() {
         super.onCleared()
         mJob.cancel()
-        mRealm.close()
+        repository.onCleared()
     }
 
     fun saveText() {
@@ -113,7 +108,7 @@ class EditMemoViewModel : ViewModel() {
 
     // 메모 불러오기
     fun Load_MemoData(id: String) {
-        memoData = mMemoDao.selectMemo(id)
+        memoData = repository.loadMemo(id)
         memoId = id
         titleTemp = memoData.title
         contentTemp = memoData.content
@@ -131,7 +126,7 @@ class EditMemoViewModel : ViewModel() {
                 // 새 메모일 경우
                 // 해당 메모 이미지 디렉토리 생성
                 if (memoId.isNullOrEmpty()) {
-                    ImageManager.SetImageDirectory(context.filesDir, memoData.id)
+                    ImageManager.setImageDirectory(context.filesDir, memoData.id)
                 }
 
                 // 파일이 있는 이미지 삭제 리스트
@@ -190,8 +185,8 @@ class EditMemoViewModel : ViewModel() {
                 // 지난 알람 삭제
                 for (i in 0 until deleteIndexList.size)
                     alarmTimeListValue.removeAt(i)
-                //  DB에 저장
-                mMemoDao.addUpdateMemo(
+                //  메모를 DB에 저장
+                repository.saveMemo(
                     memoData, titleTemp, contentTemp, images, alarmTimeListValue
                 )
             }
@@ -201,19 +196,17 @@ class EditMemoViewModel : ViewModel() {
     }
 
     private fun GetMemoImageFilePath(uri: Uri): MemoImageFilePath {
-        val bitmapOriginal = ImageManager.GetURI_To_Bitmap(context, uri)
-        val bitmapThumbnail = ImageManager.GetURI_To_BitmapResize(context, uri)
+        val bitmapOriginal = ImageManager.getURIToBitmap(context, uri)
+        val bitmapThumbnail = ImageManager.getURIToBitmapResize(context, uri)
         // 비트맵이 생성됨
         if (bitmapOriginal != null && bitmapThumbnail != null) {
-            val pathOriginal = ImageManager.SaveBitmapToJpeg(
+            val pathOriginal = ImageManager.saveBitmapToJpeg(
                 bitmapOriginal,
-                context.filesDir,
-                "/" + memoId + ImageManager.ORIGINAL_PATH
+                context.filesDir.toString() + "/" + memoData.id + ImageManager.ORIGINAL_PATH
             )
-            val pathThumbnail = ImageManager.SaveBitmapToJpeg(
+            val pathThumbnail = ImageManager.saveBitmapToJpeg(
                 bitmapThumbnail,
-                context.filesDir,
-                "/" + memoId + ImageManager.THUMBNAIL_PATH
+                context.filesDir.toString() + "/" + memoData.id + ImageManager.THUMBNAIL_PATH
             )
 
             bitmapOriginal.recycle()
@@ -235,7 +228,6 @@ class EditMemoViewModel : ViewModel() {
         )
     }
 
-    // 메모 삭제
     fun Delete_MemoData() {
         // 기존 메모
         if (!memoId.isNullOrEmpty()) {
@@ -244,30 +236,9 @@ class EditMemoViewModel : ViewModel() {
             // 아직 저장하지 않았으므로 초기 알람만 설정되어 있음
             for (alarmTime in alarmTimeListTemp)
                 MemoAlarmTool.deleteAlarm(context, memoData.id, alarmTime)
-            // 디렉토리 제거
-            setDirEmpty(context.filesDir.toString() + "/" + memoId)
-            // DB에서 제거
-            mMemoDao.deleteMemo(memoData.id)
-        }
-    }
-
-    // 이미지 저장 디렉토리 삭제 용도
-    // 디렉토리 내부 파일 제거 후 해당 디렉토리 제거
-    // 내부 파일이 비워져야 해당 디렉토리가 제거됨
-    private fun setDirEmpty(dirName: String) {
-        val dir = File(dirName)
-        val childFileList = dir.listFiles()
-
-        if (dir.exists()) {
-            for (childFile in childFileList) {
-                if (childFile.isDirectory) {
-                    // 자식 디렉토리로 재귀 호출
-                    setDirEmpty(childFile.absolutePath)
-                } else {
-                    childFile.delete()
-                }
-            }
-            dir.delete()
+            // 데이터 제거 (DB, 디렉토리)
+            val memoDir = context.filesDir.toString() + "/" + memoId
+            repository.deleteMemo(memoData.id, memoDir)
         }
     }
 

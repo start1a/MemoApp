@@ -19,8 +19,10 @@ import kotlinx.android.synthetic.main.fragment_memo_list.*
 
 class MemoListFragment : Fragment() {
 
+    // 어댑터
     private lateinit var listAdapterLinear: MemoListAdapter
     private lateinit var listAdapterGrid: MemoListAdapter
+    private lateinit var curAdapter: MemoListAdapter
     private var viewModel: MemoListViewModel? = null
 
     override fun onCreateView(
@@ -34,6 +36,7 @@ class MemoListFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
+
         viewModel = activity!!.application!!.let {
             ViewModelProvider(
                 activity!!.viewModelStore,
@@ -45,29 +48,24 @@ class MemoListFragment : Fragment() {
         viewModel!!.let { VM ->
             initAdapter()
             VM.layout_memoList.observe(this, Observer {
-                notifyAdapter(it)
+                setLayoutAdapter(it)
             })
+            VM.listNotifyListener = {
+                curAdapter.notifyDataSetChanged()
+            }
         }
     }
 
     override fun onResume() {
         super.onResume()
-        getCurAdapter().notifyDataSetChanged()
+        curAdapter.notifyDataSetChanged()
     }
 
     private fun initAdapter() {
         viewModel!!.let { VM ->
             VM.memoListLiveData.value?.let {
-                listAdapterLinear =
-                    MemoListAdapter(
-                        it,
-                        R.layout.item_memo
-                    )
-                listAdapterGrid =
-                    MemoListAdapter(
-                        it,
-                        R.layout.item_memo_card
-                    )
+                listAdapterLinear = MemoListAdapter(it, R.layout.item_memo)
+                listAdapterGrid = MemoListAdapter(it, R.layout.item_memo_card)
             }
             listAdapterLinear.itemClickListener = {
                 setItemClickListener(it)
@@ -78,24 +76,17 @@ class MemoListFragment : Fragment() {
         }
     }
 
-    private fun getCurAdapter(): MemoListAdapter {
-        viewModel!!.let { vm ->
-            return when (vm.layout_memoList.value) {
-                vm.LAYOUT_LINEAR -> listAdapterLinear
-                else -> listAdapterGrid
-            }
-        }
-    }
-
-    private fun notifyAdapter(type: Int) {
+    private fun setLayoutAdapter(type: Int) {
         viewModel!!.let { VM ->
             when (type) {
                 VM.LAYOUT_LINEAR -> {
+                    curAdapter = listAdapterLinear
                     memoListView.layoutManager =
                         LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
                     memoListView.adapter = listAdapterLinear
                 }
                 VM.LAYOUT_GRID -> {
+                    curAdapter = listAdapterGrid
                     memoListView.layoutManager =
                         StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
                     memoListView.adapter = listAdapterGrid

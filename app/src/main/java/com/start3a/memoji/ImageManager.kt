@@ -12,11 +12,11 @@ class ImageManager {
 
     companion object {
 
-        const val TAG = "IMAGE_ERROR_TAG"
+        private const val TAG = "IMAGE_ERROR_TAG"
         const val UNSAVABLE_IMAGE = "Unsavable_Image"
         const val THUMBNAIL_PATH = "/ImageThumbnail"
         const val ORIGINAL_PATH = "/ImageOriginal"
-        const val VALUE_RESIZE = 200
+        private const val VALUE_RESIZE = 200
 
         fun calculateInSampleSize(
             options: BitmapFactory.Options,
@@ -62,9 +62,9 @@ class ImageManager {
             }
         }
 
-        fun SaveBitmapToJpeg(bitmap: Bitmap, filesDir: File, destDir: String): String {
+        fun saveBitmapToJpeg(bitmap: Bitmap, dir: String): String {
             // 파일 객체 생성
-            val storage = filesDir.toString() + destDir
+            val storage = dir
             val fileName = UUID.randomUUID().toString() + ".jpg"
             val tempFile = File(storage, fileName)
 
@@ -87,7 +87,7 @@ class ImageManager {
             return ""
         }
 
-        fun GetURI_To_Bitmap(context: Context, uri: Uri): Bitmap? {
+        fun getURIToBitmap(context: Context, uri: Uri): Bitmap? {
             try {
                 val ist = context.contentResolver.openInputStream(uri)
                 return BitmapFactory.decodeStream(ist)
@@ -98,7 +98,7 @@ class ImageManager {
             }
         }
 
-        fun GetURI_To_BitmapResize(context: Context, uri: Uri): Bitmap? {
+        fun getURIToBitmapResize(context: Context, uri: Uri): Bitmap? {
             try {
                 val ist1 = context.contentResolver.openInputStream(uri)
                 return ist1?.run {
@@ -111,7 +111,7 @@ class ImageManager {
             }
         }
 
-        fun SetImageDirectory(filesDir: File, memoId: String) {
+        fun setImageDirectory(filesDir: File, memoId: String) {
             // 썸네일 이미지 디렉토리
             val fileDirImage = File(filesDir.toString() + "/" + memoId)
             if (!fileDirImage.exists()) fileDirImage.mkdir()
