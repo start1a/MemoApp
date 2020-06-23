@@ -8,6 +8,7 @@ import com.start3a.memoji.Model.FireStoreDao
 import com.start3a.memoji.Model.MemoDao
 import com.start3a.memoji.data.MemoData
 import com.start3a.memoji.data.MemoImageFilePath
+import com.start3a.memoji.views.LoadingProgressBar
 import io.realm.Realm
 import io.realm.RealmList
 import io.realm.RealmResults
@@ -57,6 +58,7 @@ class MemoRepository {
         mFireStoreDao.getUserMemoData(context) { list ->
             mMemoDao.SaveFireStoreMemoData(list)
             notifyListener()
+            LoadingProgressBar.dialogInterfaceLoading?.dismiss()
         }
     }
 

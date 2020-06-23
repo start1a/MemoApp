@@ -28,6 +28,7 @@ import com.start3a.memoji.viewmodel.EditMemoViewModel
 import com.start3a.memoji.views.EditMemo.Alarm.MemoAlarmFragment
 import com.start3a.memoji.views.EditMemo.Image.MemoImageFragment
 import com.start3a.memoji.views.EditMemo.Text.MemoTextFragment
+import com.start3a.memoji.views.LoadingProgressBar
 import kotlinx.android.synthetic.main.activity_edit_memo.*
 import kotlinx.android.synthetic.main.content_edit_memo.*
 import kotlinx.coroutines.*
@@ -42,7 +43,6 @@ import kotlin.coroutines.CoroutineContext
 class EditMemoActivity : AppCompatActivity(), CoroutineScope {
 
     private var viewModel: EditMemoViewModel? = null
-    var dialogInterfaceLoading: DialogInterface? = null
     private val dialogCalendar = Calendar.getInstance()
 
     // 코루틴
@@ -127,9 +127,9 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
 
     override fun onBackPressed() {
         launch {
-            Progress_ProcessingData()
+            LoadingProgressBar.Progress_ProcessingData(this@EditMemoActivity)
             viewModel!!.AddOrUpdate_MemoData()
-            dialogInterfaceLoading?.dismiss()
+            LoadingProgressBar.dialogInterfaceLoading?.dismiss()
             super.onBackPressed()
         }
     }
@@ -315,7 +315,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                         viewUrl.findViewById<Button>(R.id.btnURLImageAdd).setOnClickListener {
                             val url = editUrl.text.toString()
                             launch(handler) {
-                                Progress_ProcessingData()
+                                LoadingProgressBar.Progress_ProcessingData(this@EditMemoActivity)
                                 if (GetImageFromURL(url)) {
                                     val list = listOf<Uri>(
                                         Uri.parse(editUrl.text.toString())
@@ -332,7 +332,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                                     "잘못된 URL입니다",
                                     Toast.LENGTH_SHORT
                                 ).show()
-                                dialogInterfaceLoading?.dismiss()
+                                LoadingProgressBar.dialogInterfaceLoading?.dismiss()
                             }
                             dialogInterface?.dismiss()
                         }
@@ -453,15 +453,6 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
             // Save a file: path for use with ACTION_VIEW intents
             currentPhotoPath = absolutePath
         }
-    }
-
-    private fun Progress_ProcessingData() {
-        val alertDialog = AlertDialog.Builder(this)
-        val view = LayoutInflater.from(this).inflate(R.layout.dialog_progress_bar_for_waiting, null)
-        dialogInterfaceLoading = alertDialog
-            .setView(view)
-            .setCancelable(false)
-            .show()
     }
 
     suspend fun GetImageFromURL(urlInput: String): Boolean {

@@ -13,6 +13,7 @@ import com.start3a.memoji.R
 import com.start3a.memoji.repository.MemoRepository
 import com.start3a.memoji.viewmodel.MemoListViewModel
 import com.start3a.memoji.views.EditMemo.EditMemoActivity
+import com.start3a.memoji.views.LoadingProgressBar
 import kotlinx.android.synthetic.main.activity_memo_list.*
 
 class MemoListActivity : AppCompatActivity() {
@@ -22,6 +23,7 @@ class MemoListActivity : AppCompatActivity() {
     private val AUTH_SIGN_IN = 9001
 
     private val providers = arrayListOf(
+        AuthUI.IdpConfig.EmailBuilder().build(),
         AuthUI.IdpConfig.GoogleBuilder().build()
     )
 
@@ -89,12 +91,7 @@ class MemoListActivity : AppCompatActivity() {
                 }
 
                 R.id.action_sign_out -> {
-                    viewModel!!.isSingingIn = false
-                    AuthUI.getInstance().signOut(this)
-                    MemoRepository.userID = null
-                    startSignIn()
-                    // Local DB 비우기
-                    viewModel!!.signOutUser()
+                    signOutUser()
                 }
             }
             return true
@@ -128,9 +125,18 @@ class MemoListActivity : AppCompatActivity() {
     }
 
     private fun successSignIn() {
+        // 사용자 데이터 불러오기
+        LoadingProgressBar.Progress_ProcessingData(this@MemoListActivity)
         viewModel!!.isSingingIn = true
         MemoRepository.userID = FirebaseAuth.getInstance().currentUser?.email
-        // 사용자 데이터 불러오기
         viewModel!!.getUserData()
+    }
+
+    private fun signOutUser() {
+        viewModel!!.isSingingIn = false
+        MemoRepository.userID = null
+        AuthUI.getInstance().signOut(this)
+        viewModel!!.signOutUser()
+        startSignIn()
     }
 }
