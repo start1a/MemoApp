@@ -109,11 +109,9 @@ class CloudStorageDao(private val mStorageRef: StorageReference) {
         ref.delete()
             .addOnSuccessListener {
                 Log.d(TAG, "successfully delete Image File")
-                Log.d(TAG, "deleted : " + ref.path)
             }
             .addOnFailureListener { e ->
                 Log.w(TAG, "Error writing document", e)
-                Log.d(TAG, ref.path)
             }
     }
 }
