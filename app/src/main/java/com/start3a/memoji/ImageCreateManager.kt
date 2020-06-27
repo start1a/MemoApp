@@ -5,17 +5,16 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
+import com.start3a.memoji.repository.Repository
 import java.io.*
 import java.util.*
 
-class ImageManager {
+class ImageCreateManager {
 
     companion object {
 
-        private const val TAG = "IMAGE_ERROR_TAG"
+        private const val TAG = "ImageCreateManager"
         const val UNSAVABLE_IMAGE = "Unsavable_Image"
-        const val THUMBNAIL_PATH = "/ImageThumbnail"
-        const val ORIGINAL_PATH = "/ImageOriginal"
         private const val VALUE_RESIZE = 200
 
         fun calculateInSampleSize(
@@ -64,9 +63,8 @@ class ImageManager {
 
         fun saveBitmapToJpeg(bitmap: Bitmap, dir: String): String {
             // 파일 객체 생성
-            val storage = dir
-            val fileName = UUID.randomUUID().toString() + ".jpg"
-            val tempFile = File(storage, fileName)
+            val fileName = "${UUID.randomUUID()}.jpg"
+            val tempFile = File(dir, fileName)
 
             // 파일 저장
             try {
@@ -75,7 +73,7 @@ class ImageManager {
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 70, out)
                 out.close()
 
-                return "$storage/$fileName"
+                return "$dir/$fileName"
 
             } catch (e: FileNotFoundException) {
                 Log.e(TAG, "FileNotFoundException :  " + e.printStackTrace())
@@ -113,12 +111,11 @@ class ImageManager {
 
         fun setImageDirectory(filesDir: File, memoId: String) {
             // 썸네일 이미지 디렉토리
-            val fileDirImage = File(filesDir.toString() + "/" + memoId)
-            if (!fileDirImage.exists()) fileDirImage.mkdir()
-            val fileThumbnail = File(fileDirImage.toString() + THUMBNAIL_PATH)
-            if (!fileThumbnail.exists()) fileThumbnail.mkdir()
-            val fileOriginal = File(fileDirImage.toString() + ORIGINAL_PATH)
-            if (!fileOriginal.exists()) fileOriginal.mkdir()
+            val dirParent = "$filesDir/${Repository.MEMOS}/$memoId"
+            val fileThumbnail = File("$dirParent/${Repository.THUMBNAIL_PATH}")
+            if (!fileThumbnail.exists()) fileThumbnail.mkdirs()
+            val fileOriginal = File("$dirParent/${Repository.ORIGINAL_PATH}")
+            if (!fileOriginal.exists()) fileOriginal.mkdirs()
         }
     }
 }

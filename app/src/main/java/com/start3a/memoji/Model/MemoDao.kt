@@ -38,7 +38,7 @@ class MemoDao(private val realm: Realm) {
             memoData.alarmTimeList = alarmTimeList
 
             if (content.length > 100)
-                memoData.summary = content.substring(0..100) + ".."
+                memoData.summary = "${content.substring(0..100)}.."
             else
                 memoData.summary = content
 

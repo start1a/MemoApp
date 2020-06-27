@@ -6,7 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.start3a.memoji.data.MemoData
 import com.start3a.memoji.data.RealmLiveData
-import com.start3a.memoji.repository.MemoRepository
+import com.start3a.memoji.repository.Repository
 
 class MemoListViewModel : ViewModel() {
 
@@ -27,7 +27,7 @@ class MemoListViewModel : ViewModel() {
     var isSingingIn = false
 
     // Repository
-    private val repository = MemoRepository()
+    private val repository = Repository()
 
     val memoListLiveData: RealmLiveData<MemoData> by lazy {
         RealmLiveData(repository.getAllMemos())

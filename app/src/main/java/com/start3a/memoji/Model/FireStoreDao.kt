@@ -10,7 +10,7 @@ import com.start3a.memoji.data.ImageFilePathForFireStore
 import com.start3a.memoji.data.MemoData
 import com.start3a.memoji.data.MemoDataForFireStore
 import com.start3a.memoji.data.MemoImageFilePath
-import com.start3a.memoji.repository.MemoRepository
+import com.start3a.memoji.repository.Repository
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Observer
@@ -24,13 +24,11 @@ class FireStoreDao(private val mFireStore: FirebaseFirestore) {
 
     companion object {
         private const val TAG = "FireStoreDao"
-        private const val USERS = "Users"
-        private const val MEMOS = "Memos"
     }
 
     // 사용자 메모 가져오기
     // FireStore -> Realm DB
-    fun getUserMemoData(context: Context, setUserDatalistener: (MutableList<MemoData>) -> Unit) {
+    fun getUserMemos(context: Context, setUserDatalistener: (MutableList<MemoData>) -> Unit) {
         val list = mutableListOf<MemoData>()
 
         val completeTaskFunction = Function<QueryDocumentSnapshot, MemoData> { doc ->
@@ -67,47 +65,7 @@ class FireStoreDao(private val mFireStore: FirebaseFirestore) {
             }
         }
 
-        setDBAndNotify(MEMOS, completeTaskFunction, observer)
-    }
-
-    fun saveMemo(memo: MemoData) {
-        val docData = hashMapOf(
-            "id" to memo.id,
-            "title" to memo.title,
-            "content" to memo.content,
-            "summary" to memo.summary,
-            "date" to Timestamp(memo.date),
-            "imageFileLinks" to arrayListOf<ImageFilePathForFireStore>().apply {
-                memo.imageFileLinks.forEach {
-                    add(
-                        ImageFilePathForFireStore(
-                            it.uri,
-                            it.thumbnailPath,
-                            it.originalPath
-                        )
-                    )
-                }
-            },
-            "alarmTimeList" to arrayListOf<Timestamp>().apply {
-                memo.alarmTimeList.forEach {
-                    add(Timestamp(it))
-                }
-            }
-        )
-
-        mFireStore.collection(USERS).document(MemoRepository.userID!!)
-            .collection(MEMOS).document(memo.id)
-            .set(docData)
-            .addOnSuccessListener { Log.d(TAG, "DocumentSnapshot successfully written!") }
-            .addOnFailureListener { e -> Log.w(TAG, "Error writing document", e) }
-    }
-
-    fun deleteMemo(memoID: String) {
-        mFireStore.collection(USERS).document(MemoRepository.userID!!)
-            .collection(MEMOS).document(memoID)
-            .delete()
-            .addOnSuccessListener { Log.d(TAG, "DocumentSnapshot successfully deleted!") }
-            .addOnFailureListener { e -> Log.w(TAG, "Error deleting document", e) }
+        setDBAndNotify(Repository.MEMOS, completeTaskFunction, observer)
     }
 
     // 컬렉션마다 타입을 지정하여 FireStore로부터 데이터 요청
@@ -116,7 +74,7 @@ class FireStoreDao(private val mFireStore: FirebaseFirestore) {
         function: Function<QueryDocumentSnapshot, R>,
         observer: Observer<R>
     ) {
-        mFireStore.collection(USERS).document(MemoRepository.userID!!)
+        mFireStore.collection(Repository.USERS).document(Repository.userID!!)
             .collection(nameCollection)
             .get()
             .addOnSuccessListener { documents ->
@@ -162,5 +120,45 @@ class FireStoreDao(private val mFireStore: FirebaseFirestore) {
                 }
             }
         )
+    }
+
+    fun saveMemo(memo: MemoData) {
+        val docMemoData = hashMapOf(
+            "id" to memo.id,
+            "title" to memo.title,
+            "content" to memo.content,
+            "summary" to memo.summary,
+            "date" to Timestamp(memo.date),
+            "imageFileLinks" to arrayListOf<ImageFilePathForFireStore>().apply {
+                memo.imageFileLinks.forEach {
+                    add(
+                        ImageFilePathForFireStore(
+                            it.uri,
+                            it.thumbnailPath,
+                            it.originalPath
+                        )
+                    )
+                }
+            },
+            "alarmTimeList" to arrayListOf<Timestamp>().apply {
+                memo.alarmTimeList.forEach {
+                    add(Timestamp(it))
+                }
+            }
+        )
+
+        mFireStore.collection(Repository.USERS).document(Repository.userID!!)
+            .collection(Repository.MEMOS).document(memo.id)
+            .set(docMemoData)
+            .addOnSuccessListener { Log.d(TAG, "DocumentSnapshot successfully written!") }
+            .addOnFailureListener { e -> Log.w(TAG, "Error writing document", e) }
+    }
+
+    fun deleteMemo(memoID: String) {
+        mFireStore.collection(Repository.USERS).document(Repository.userID!!)
+            .collection(Repository.MEMOS).document(memoID)
+            .delete()
+            .addOnSuccessListener { Log.d(TAG, "DocumentSnapshot successfully deleted!") }
+            .addOnFailureListener { e -> Log.w(TAG, "Error deleting document", e) }
     }
 }

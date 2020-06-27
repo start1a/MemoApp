@@ -10,7 +10,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
 import com.start3a.memoji.R
-import com.start3a.memoji.repository.MemoRepository
+import com.start3a.memoji.repository.Repository
 import com.start3a.memoji.viewmodel.MemoListViewModel
 import com.start3a.memoji.views.EditMemo.EditMemoActivity
 import com.start3a.memoji.views.LoadingProgressBar
@@ -128,13 +128,13 @@ class MemoListActivity : AppCompatActivity() {
         // 사용자 데이터 불러오기
         LoadingProgressBar.Progress_ProcessingData(this@MemoListActivity)
         viewModel!!.isSingingIn = true
-        MemoRepository.userID = FirebaseAuth.getInstance().currentUser?.email
+        Repository.userID = FirebaseAuth.getInstance().currentUser?.email
         viewModel!!.getUserData()
     }
 
     private fun signOutUser() {
         viewModel!!.isSingingIn = false
-        MemoRepository.userID = null
+        Repository.userID = null
         AuthUI.getInstance().signOut(this)
         viewModel!!.signOutUser()
         startSignIn()

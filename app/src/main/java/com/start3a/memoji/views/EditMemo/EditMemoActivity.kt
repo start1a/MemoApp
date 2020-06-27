@@ -34,10 +34,10 @@ import kotlinx.android.synthetic.main.content_edit_memo.*
 import kotlinx.coroutines.*
 import java.io.File
 import java.io.IOException
+import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
-import javax.net.ssl.HttpsURLConnection
 import kotlin.coroutines.CoroutineContext
 
 class EditMemoActivity : AppCompatActivity(), CoroutineScope {
@@ -458,14 +458,11 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
     suspend fun GetImageFromURL(urlInput: String): Boolean {
         var code = 0
         withContext(Dispatchers.IO) {
-            lateinit var con: HttpsURLConnection
-
-            var url = URL(urlInput)
-            con = url.openConnection() as HttpsURLConnection
-            con.connect()
-
-            code = con.responseCode
-            con.disconnect()
+            val con = URL(urlInput).openConnection() as HttpURLConnection
+            con.run {
+                code = responseCode
+                disconnect()
+            }
         }
         return code == 200
     }

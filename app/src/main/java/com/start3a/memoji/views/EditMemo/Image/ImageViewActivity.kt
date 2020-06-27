@@ -1,12 +1,10 @@
 package com.start3a.memoji.views.EditMemo.Image
 
-import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
-import com.start3a.memoji.ImageTransform
 import com.start3a.memoji.R
 import com.start3a.memoji.viewmodel.ImageDetailViewModel
 import kotlinx.android.synthetic.main.activity_image_view.*
@@ -33,26 +31,17 @@ class ImageViewActivity : AppCompatActivity() {
                 .load(vm.imageUri)
                 .error(
                     // 원본 이미지가 제거되어있을 경우
-                    // FileNotFoundException 발생 가능성
-                    AlternativeImage(viewModel!!.imageOriginalPath)
+                    AlternativeImage(vm.imageOriginalPath)
                 )
                 .into(photo_view)
         }
     }
 
     // 이미지 출력 에러 처리
-    private fun AlternativeImage(imagePath: String) = Glide.with(this)
-        .load(imagePath.run {
-            // 저장된 이미지 파일 존재 여부 체크
-            if (this.isNotEmpty()) {
-                // 왼쪽으로 90도 회전
-                val prevBitmap = BitmapFactory.decodeFile(imagePath)
-                ImageTransform.getRotatedBitmap(prevBitmap, -90)
-            }
-            else {
-                R.drawable.icon_error
-            }
-        })
+    private fun AlternativeImage(imagePath: String) =
+        Glide.with(this)
+            .load(imagePath)
+            .error(R.drawable.icon_error)
 
 
     override fun onResume() {
