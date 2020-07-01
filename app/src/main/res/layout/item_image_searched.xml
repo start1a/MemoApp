@@ -3,14 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="120dp"
-    android:background="@color/white"
-    android:padding="2dp"
-    android:orientation="vertical">
+    android:layout_height="150dp"
+    android:padding="4dp">
 
     <ImageView
         android:id="@+id/imageItem"
-        android:layout_width="120dp"
+        android:layout_width="150dp"
         android:layout_height="0dp"
         android:scaleType="centerCrop"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -19,11 +17,24 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:srcCompat="@tools:sample/avatars" />
 
-    <CheckBox
-        android:id="@+id/itemCheck"
+    <TextView
+        android:id="@+id/textNum"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="@id/imageItem"
-        app:layout_constraintTop_toTopOf="@id/imageItem" />
+        android:background="@drawable/borderline_layout"
+        android:visibility="gone"
+        android:padding="8dp"
+        android:text="@string/Checked"
+        app:layout_constraintEnd_toEndOf="@+id/imageItem"
+        app:layout_constraintTop_toTopOf="@+id/imageItem" />
+
+    <ImageButton
+        android:id="@+id/imgBtnDetail"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/borderline_layout"
+        android:src="@drawable/ic_baseline_image_24"
+        app:layout_constraintBottom_toBottomOf="@+id/imageItem"
+        app:layout_constraintStart_toStartOf="@+id/imageItem" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

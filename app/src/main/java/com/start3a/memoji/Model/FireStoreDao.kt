@@ -6,7 +6,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QueryDocumentSnapshot
 import com.start3a.memoji.MemoAlarmTool
-import com.start3a.memoji.data.ImageFilePathForFireStore
+import com.start3a.memoji.data.ImgFilePathForFireStore
 import com.start3a.memoji.data.MemoData
 import com.start3a.memoji.data.MemoDataForFireStore
 import com.start3a.memoji.data.MemoImageFilePath
@@ -129,10 +129,10 @@ class FireStoreDao(private val mFireStore: FirebaseFirestore) {
             "content" to memo.content,
             "summary" to memo.summary,
             "date" to Timestamp(memo.date),
-            "imageFileLinks" to arrayListOf<ImageFilePathForFireStore>().apply {
+            "imageFileLinks" to arrayListOf<ImgFilePathForFireStore>().apply {
                 memo.imageFileLinks.forEach {
                     add(
-                        ImageFilePathForFireStore(
+                        ImgFilePathForFireStore(
                             it.uri,
                             it.thumbnailPath,
                             it.originalPath

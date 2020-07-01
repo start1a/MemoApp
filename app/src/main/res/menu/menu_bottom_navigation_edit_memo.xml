@@ -10,7 +10,7 @@
 
     <item
         android:id="@+id/action_fragment_image"
-        android:icon="@drawable/ic_insert_photo_black_24dp"
+        android:icon="@drawable/ic_baseline_image_24"
         android:title="@string/memo_image"
         app:showAsAction="ifRoom" />
 

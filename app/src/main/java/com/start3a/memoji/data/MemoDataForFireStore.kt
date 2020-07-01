@@ -9,6 +9,6 @@ data class MemoDataForFireStore(
     var content: String? = null,
     var summary: String? = null,
     var date: Date? = null,
-    var imageFileLinks: ArrayList<ImageFilePathForFireStore>? = null,
+    var imageFileLinks: ArrayList<ImgFilePathForFireStore>? = null,
     var alarmTimeList: ArrayList<Timestamp>? = null
 )

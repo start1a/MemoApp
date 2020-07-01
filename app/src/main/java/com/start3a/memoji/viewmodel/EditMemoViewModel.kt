@@ -169,10 +169,10 @@ class EditMemoViewModel : ViewModel() {
                 }.join()
 
                 // 기존 알람 삭제
-                for (alarmTime in alarmTimeListTemp) {
-                    // 이전 시간 알람 OR 해당 시간 알람이 제거됨
-                    if (alarmTime.before(Date()) || !alarmTimeListValue.contains(alarmTime))
-                        MemoAlarmTool.deleteAlarm(context, memoData.id, alarmTime)
+                alarmTimeListTemp.forEach {
+                    // 이전 시간 알람 OR 사용자가 삭제한 알람
+                    if (it.before(Date()) || !alarmTimeListValue.contains(it))
+                        MemoAlarmTool.deleteAlarm(context, memoData.id, it)
                 }
                 // 새로 알람 갱신
                 val deleteIndexList = mutableListOf<Int>()
@@ -255,7 +255,7 @@ class EditMemoViewModel : ViewModel() {
     }
 
     // 이미지 추가
-    fun AddImageList(listAdd: List<Uri>) {
+    fun addImageList(listAdd: List<Uri>) {
         // uri 형태로 출력
         val list = RealmList<MemoImageFilePath>()
         for (element in listAdd)

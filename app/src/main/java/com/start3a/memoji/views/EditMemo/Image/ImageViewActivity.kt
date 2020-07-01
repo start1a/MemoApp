@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import com.bumptech.glide.Glide
 import com.start3a.memoji.R
 import com.start3a.memoji.viewmodel.ImageDetailViewModel
 import kotlinx.android.synthetic.main.activity_image_view.*
@@ -12,6 +11,7 @@ import kotlinx.android.synthetic.main.activity_image_view.*
 class ImageViewActivity : AppCompatActivity() {
 
     private var viewModel: ImageDetailViewModel? = null
+    private var listAdapter: ImageDetailViewListAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,26 +23,23 @@ class ImageViewActivity : AppCompatActivity() {
                 .get(ImageDetailViewModel::class.java)
         }
         viewModel!!.let { vm ->
-            vm.imageUri = intent.getStringExtra("imageUri") ?: ""
-            vm.imageOriginalPath = intent.getStringExtra("imageOriginal") ?: ""
+            // intent
+            vm.index = intent.getIntExtra("selectedIndex", 0)
+            vm.images = intent.getStringArrayListExtra("images") ?: arrayListOf()
+            vm.imagesAlternative =
+                intent.getStringArrayListExtra("imageAlternative") ?: arrayListOf()
 
-            // 이미지 출력
-            Glide.with(this)
-                .load(vm.imageUri)
-                .error(
-                    // 원본 이미지가 제거되어있을 경우
-                    AlternativeImage(vm.imageOriginalPath)
-                )
-                .into(photo_view)
+            // 뷰페이저
+            listAdapter = ImageDetailViewListAdapter(vm.images, vm.imagesAlternative)
+            imageDetailViewPager.run {
+                adapter = listAdapter
+                currentItem = vm.index
+                setPageTransformer { page, position ->
+                    vm.index = position.toInt()
+                }
+            }
         }
     }
-
-    // 이미지 출력 에러 처리
-    private fun AlternativeImage(imagePath: String) =
-        Glide.with(this)
-            .load(imagePath)
-            .error(R.drawable.icon_error)
-
 
     override fun onResume() {
         super.onResume()

@@ -27,6 +27,7 @@ import com.start3a.memoji.R
 import com.start3a.memoji.viewmodel.EditMemoViewModel
 import com.start3a.memoji.views.EditMemo.Alarm.MemoAlarmFragment
 import com.start3a.memoji.views.EditMemo.Image.MemoImageFragment
+import com.start3a.memoji.views.EditMemo.Image.Search.SearchImageActivity
 import com.start3a.memoji.views.EditMemo.Text.MemoTextFragment
 import com.start3a.memoji.views.LoadingProgressBar
 import kotlinx.android.synthetic.main.activity_edit_memo.*
@@ -42,8 +43,16 @@ import kotlin.coroutines.CoroutineContext
 
 class EditMemoActivity : AppCompatActivity(), CoroutineScope {
 
+    companion object {
+        // private lateinit var photoURI: Uri
+        val REQUEST_IMAGE_GALLERY = 0
+        val REQUEST_IMAGE_CAMERA = 1
+        val REQUEST_IMAGE_DOWNLOAD = 2
+    }
+
     private var viewModel: EditMemoViewModel? = null
     private val dialogCalendar = Calendar.getInstance()
+    private val TAG = "EditMemoActivity1"
 
     // 코루틴
     private lateinit var mJob: Job
@@ -61,10 +70,6 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
     // 이미지 처리 데이터
     private lateinit var currentPhotoPath: String
     private lateinit var photoURI: Uri
-
-    // private lateinit var photoURI: Uri
-    private val REQUEST_IMAGE_GALLERY = 0
-    private val REQUEST_IMAGE_CAMERA = 1
 
     // 새 메모? 기존 메모? 체크 (새 메모 = null)
     private var id: String? = null
@@ -242,106 +247,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
 
                 R.id.action_delete -> DialogDeleteMemo()
 
-                R.id.action_add_image -> {
-
-                    var dialogInterface: DialogInterface? = null
-                    val alertDialog = AlertDialog.Builder(this)
-                    val view = LayoutInflater.from(this).inflate(R.layout.dialog_insert_image, null)
-
-                    view.findViewById<Button>(R.id.btnGallery).setOnClickListener {
-                        val intent = Intent(
-                            Intent.ACTION_OPEN_DOCUMENT,
-                            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-                        )
-                        intent.type = "image/*"
-                        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-                        startActivityForResult(
-                            Intent.createChooser(intent, "Select Picture"),
-                            REQUEST_IMAGE_GALLERY
-                        )
-                    }
-
-                    view.findViewById<Button>(R.id.btnCamera).setOnClickListener {
-
-                        val permissionCheck =
-                            ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-
-                        if (permissionCheck == PackageManager.PERMISSION_DENIED) {
-                            val requiredPermissions = arrayOf(
-                                Manifest.permission.CAMERA,
-                                Manifest.permission.WRITE_EXTERNAL_STORAGE
-                            )
-                            ActivityCompat.requestPermissions(this, requiredPermissions, 1)
-
-                        } else {
-                            Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
-                                takePictureIntent.resolveActivity(packageManager)?.also {
-                                    val photoFile: File? = try {
-                                        createImageFile()
-                                    } catch (ex: IOException) {
-                                        null
-                                    }
-                                    photoFile?.also {
-                                        photoURI = FileProvider.getUriForFile(
-                                            this,
-                                            "com.start3a.memoji.fileprovider",
-                                            it
-                                        )
-                                        takePictureIntent.putExtra(
-                                            MediaStore.EXTRA_OUTPUT,
-                                            photoURI
-                                        )
-                                        startActivityForResult(
-                                            takePictureIntent,
-                                            REQUEST_IMAGE_CAMERA
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                    }
-
-                    view.findViewById<Button>(R.id.btnURL).setOnClickListener {
-                        dialogInterface?.dismiss()
-                        val viewUrl = LayoutInflater.from(this).inflate(R.layout.dialog_edit_url, null)
-                        val editUrl = viewUrl.findViewById<EditText>(R.id.editURL)
-
-                        dialogInterface = alertDialog
-                            .setView(viewUrl)
-                            .setTitle("URL을 입력하세요")
-                            .show()
-
-                        viewUrl.findViewById<Button>(R.id.btnURLImageAdd).setOnClickListener {
-                            val url = editUrl.text.toString()
-                            launch(handler) {
-                                LoadingProgressBar.Progress_ProcessingData(this@EditMemoActivity)
-                                if (GetImageFromURL(url)) {
-                                    val list = listOf<Uri>(
-                                        Uri.parse(editUrl.text.toString())
-                                    )
-                                    VM.AddImageList(list)
-                                    Toast.makeText(
-                                        applicationContext,
-                                        "이미지 업로드 완료",
-                                        Toast.LENGTH_SHORT
-                                    )
-                                        .show()
-                                } else Toast.makeText(
-                                    applicationContext,
-                                    "잘못된 URL입니다",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                LoadingProgressBar.dialogInterfaceLoading?.dismiss()
-                            }
-                            dialogInterface?.dismiss()
-                        }
-                    }
-                    dialogInterface = alertDialog
-                        .setView(view)
-                        .setTitle("이미지 추가")
-                        .show()
-                }
+                R.id.action_add_image -> menuAddImage()
 
                 R.id.action_delete_image -> VM.setEditable(true)
 
@@ -375,13 +281,14 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                 if (resultCode == Activity.RESULT_OK && data != null) {
                     val uri = data.data
                     val clipData = data.clipData
-                    val list = mutableListOf<Uri>()
+                    val listUri = mutableListOf<Uri>()
                     // 2개 이상
                     if (clipData != null) {
                         var numNullBitmap = 0
                         for (i in 0 until clipData.itemCount) {
+                            Log.d(TAG, clipData.getItemAt(i).uri.toString())
                             val item = clipData.getItemAt(i).uri
-                            if (item != null) list.add(item)
+                            if (item != null) listUri.add(item)
                             else ++numNullBitmap
                         }
                         if (numNullBitmap > 0) {
@@ -391,20 +298,37 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                                 Toast.LENGTH_LONG
                             ).show()
                         }
-                        viewModel!!.AddImageList(list)
+                        viewModel!!.addImageList(listUri)
                     }
                     // 1개
                     else if (uri != null) {
-                        list.add(uri)
-                        viewModel!!.AddImageList(list)
+                        listUri.add(uri)
+                        viewModel!!.addImageList(listUri)
                     }
                 }
             }
 
             REQUEST_IMAGE_CAMERA -> {
                 if (resultCode == Activity.RESULT_OK) {
-                    viewModel!!.AddImageList(listOf(photoURI))
+                    viewModel!!.addImageList(listOf(photoURI))
                 } else Toast.makeText(this, "촬영 이미지 불러오기 실패", Toast.LENGTH_LONG).show()
+            }
+
+            REQUEST_IMAGE_DOWNLOAD -> {
+                Log.d(TAG, "request image download")
+                if (data == null) Log.d(TAG, "data is null")
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    Log.d(TAG, "result is not null")
+                    data.getStringArrayListExtra("resImages")?.let {
+                        Log.d(TAG, "data is not null")
+                        if (it.size > 0) Log.d(TAG, "data is over 0")
+                        val listUri = mutableListOf<Uri>()
+                        it.forEach {
+                            listUri.add(Uri.parse(it))
+                        }
+                        viewModel!!.addImageList(listUri)
+                    }
+                }
             }
         }
     }
@@ -532,12 +456,126 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                 else {
                     viewModel?.UpdateAlarm(index, dialogCalendar.time)?.let { isSuccess ->
                         if (!isSuccess)
-                            Toast.makeText(this, "동일한 알람이 존재하여 변경되지 않았습니다", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, "동일한 알람이 존재하여 변경되지 않았습니다", Toast.LENGTH_SHORT)
+                                .show()
                     }
                 }
             },
             0, 0, true
         )
         timePickerDialog.show()
+    }
+
+    private fun menuAddImage() {
+        var dialogInterface: DialogInterface? = null
+        val alertDialog = AlertDialog.Builder(this)
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_insert_image, null)
+
+        // 갤러리
+        view.findViewById<Button>(R.id.btnGallery).setOnClickListener {
+            val intent = Intent(
+                Intent.ACTION_OPEN_DOCUMENT,
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+            )
+            intent.type = "image/*"
+            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+            startActivityForResult(
+                Intent.createChooser(intent, "Select Picture"),
+                REQUEST_IMAGE_GALLERY
+            )
+        }
+
+        // 카메라
+        view.findViewById<Button>(R.id.btnCamera).setOnClickListener {
+
+            val permissionCheck =
+                ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+
+            if (permissionCheck == PackageManager.PERMISSION_DENIED) {
+                val requiredPermissions = arrayOf(
+                    Manifest.permission.CAMERA,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                )
+                ActivityCompat.requestPermissions(this, requiredPermissions, 1)
+
+            } else {
+                Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
+                    takePictureIntent.resolveActivity(packageManager)?.also {
+                        val photoFile: File? = try {
+                            createImageFile()
+                        } catch (ex: IOException) {
+                            null
+                        }
+                        photoFile?.also {
+                            photoURI = FileProvider.getUriForFile(
+                                this,
+                                "com.start3a.memoji.fileprovider",
+                                it
+                            )
+                            takePictureIntent.putExtra(
+                                MediaStore.EXTRA_OUTPUT,
+                                photoURI
+                            )
+                            startActivityForResult(
+                                takePictureIntent,
+                                REQUEST_IMAGE_CAMERA
+                            )
+                        }
+                    }
+                }
+            }
+
+        }
+
+        // URL에서 가져오기
+        view.findViewById<Button>(R.id.btnURL).setOnClickListener {
+            dialogInterface?.dismiss()
+            val viewUrl = LayoutInflater.from(this).inflate(R.layout.dialog_edit_url, null)
+            val editUrl = viewUrl.findViewById<EditText>(R.id.editURL)
+
+            dialogInterface = alertDialog
+                .setView(viewUrl)
+                .setTitle("URL을 입력하세요")
+                .show()
+
+            // 추가
+            viewUrl.findViewById<Button>(R.id.btnURLImageAdd).setOnClickListener {
+                val url = editUrl.text.toString()
+                launch(handler) {
+                    LoadingProgressBar.Progress_ProcessingData(this@EditMemoActivity)
+                    if (GetImageFromURL(url)) {
+                        val list = listOf<Uri>(
+                            Uri.parse(editUrl.text.toString())
+                        )
+                        viewModel!!.addImageList(list)
+                        Toast.makeText(
+                            applicationContext,
+                            "이미지 업로드 완료",
+                            Toast.LENGTH_SHORT
+                        )
+                            .show()
+                    } else Toast.makeText(
+                        applicationContext,
+                        "잘못된 URL입니다",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    LoadingProgressBar.dialogInterfaceLoading?.dismiss()
+                }
+                dialogInterface?.dismiss()
+            }
+        }
+
+        // 이미지 다운로드
+        view.findViewById<Button>(R.id.btnSearchDownload).setOnClickListener {
+            startActivityForResult(
+                Intent(this, SearchImageActivity::class.java),
+                REQUEST_IMAGE_DOWNLOAD
+            )
+        }
+
+        dialogInterface = alertDialog
+            .setView(view)
+            .setTitle("이미지 추가")
+            .show()
     }
 }

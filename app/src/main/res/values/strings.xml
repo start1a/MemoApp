@@ -102,4 +102,5 @@
     <string name="memo_alarm">Alarm</string>
     <string name="Delete">삭제</string>
     <string name="all_select">모두 선택</string>
+    <string name="Checked">V</string>
 </resources>

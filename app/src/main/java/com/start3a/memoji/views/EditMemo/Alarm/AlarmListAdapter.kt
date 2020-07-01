@@ -5,10 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.start3a.memoji.R
-import com.start3a.memoji.data.ImageResource
-import com.start3a.memoji.data.MemoImageFilePath
 import kotlinx.android.synthetic.main.item_alarm_memo.view.*
-import kotlinx.android.synthetic.main.item_image_memo.view.*
 import java.text.SimpleDateFormat
 import java.util.*
 

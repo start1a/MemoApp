@@ -68,10 +68,18 @@ class MemoImageFragment : Fragment() {
             })
             // 이미지 클릭 리스너 : 보기 모드
             listImageAdapter.let { adapter ->
-                adapter.itemClickListener = { imageUri, imageOriginal ->
-                    val intent = Intent(activity, ImageViewActivity::class.java)
-                    intent.putExtra("imageUri", imageUri)
-                    intent.putExtra("imageOriginal", imageOriginal)
+                adapter.itemClickListener = { images, index ->
+                    val intent = Intent(activity, ImageViewActivity::class.java).apply {
+                        val listOrigin = arrayListOf<String>()
+                        val listUri = arrayListOf<String>()
+                        images.forEach {
+                            listOrigin.add(it.originalPath)
+                            listUri.add(it.uri)
+                        }
+                        putExtra("selectedIndex", index)
+                        putStringArrayListExtra("images", listOrigin)
+                        putStringArrayListExtra("imageAlternative", listUri)
+                    }
                     startActivity(intent)
                 }
             }
