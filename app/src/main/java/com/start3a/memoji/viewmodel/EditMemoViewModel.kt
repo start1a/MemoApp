@@ -1,7 +1,7 @@
 package com.start3a.memoji.viewmodel
 
 import android.content.Context
-import android.net.Uri
+import android.graphics.Bitmap
 import android.view.Menu
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -23,8 +23,8 @@ import java.util.*
 class EditMemoViewModel : ViewModel() {
 
     // 텍스트
-    val title: MutableLiveData<String> = MutableLiveData<String>()
-    val content: MutableLiveData<String> = MutableLiveData<String>()
+    val title = MutableLiveData<String>()
+    val content = MutableLiveData<String>()
     var titleTemp: String = ""
     var contentTemp: String = ""
 
@@ -50,6 +50,9 @@ class EditMemoViewModel : ViewModel() {
     lateinit var datePickerShowListener: (index: Int) -> Unit
     lateinit var deleteAlarmListListener: () -> Unit
 
+    // 카테고리
+    var category = MutableLiveData<String>()
+
     // 코루틴
     private val MAX_COROUTINE_JOB = 4
     private var mJob = Job()
@@ -61,7 +64,7 @@ class EditMemoViewModel : ViewModel() {
     // 임시 메모 정보
     // 새 메모 = null 기존 메모 = !null
     var memoId: String? = null
-    private var memoData = MemoData()
+    var memoData = MemoData()
 
     // UI 정보
     var mMenu: Menu? = null
@@ -74,7 +77,7 @@ class EditMemoViewModel : ViewModel() {
     var deleteDataList: MutableList<Int> = mutableListOf()
 
     // 해당 탭의 컨텐츠 삭제 메뉴 리스너
-    lateinit var AllContentSelectListener: () -> Unit
+    lateinit var allContentSelectListener: () -> Unit
 
     // repository
     private val repository = Repository()
@@ -114,6 +117,7 @@ class EditMemoViewModel : ViewModel() {
         contentTemp = memoData.content
         alarmTimeList.value = memoData.alarmTimeList
         alarmTimeListTemp.addAll(memoData.alarmTimeList)
+        category.value = memoData.category
     }
 
     // 메모 수정
@@ -156,7 +160,7 @@ class EditMemoViewModel : ViewModel() {
                                 if (index-- >= 0 && images[index + 1]!!.thumbnailPath.isEmpty()) {
                                     val item = images[index + 1]!!
                                     val fileLinks = GetMemoImageFilePath(
-                                        Uri.parse(item.uri),
+                                        item.uri,
                                         "${context.filesDir}/${Repository.MEMOS}/${memoData.id}"
                                     )
                                     item.thumbnailPath = fileLinks.thumbnailPath
@@ -192,6 +196,10 @@ class EditMemoViewModel : ViewModel() {
                 // 지난 알람 삭제
                 for (i in 0 until deleteIndexList.size)
                     alarmTimeListValue.removeAt(i)
+
+                // 카테고리
+                memoData.category = category.value!!
+
                 //  메모를 DB에 저장
                 repository.saveMemo(
                     memoData,
@@ -207,9 +215,18 @@ class EditMemoViewModel : ViewModel() {
         }
     }
 
-    private fun GetMemoImageFilePath(uri: Uri, memoDir: String): MemoImageFilePath {
-        val bitmapOriginal = ImageCreateManager.getURIToBitmap(context, uri)
-        val bitmapThumbnail = ImageCreateManager.getURIToBitmapResize(context, uri)
+    private fun GetMemoImageFilePath(imgSrc: String, memoDir: String): MemoImageFilePath {
+        var bitmapOriginal: Bitmap? = null
+        var bitmapThumbnail: Bitmap? = null
+
+        if (imgSrc.startsWith("content://")) {
+            bitmapOriginal = ImageCreateManager.getURIToBitmap(context, imgSrc)
+            bitmapThumbnail = ImageCreateManager.getURIToBitmapResize(context, imgSrc)
+        }
+        else if (imgSrc.startsWith("http")) {
+            bitmapOriginal = ImageCreateManager.getURLToBitmap(imgSrc)
+            bitmapThumbnail = ImageCreateManager.getURLToBitmapResize(imgSrc)
+        }
         // 비트맵이 생성됨
         if (bitmapOriginal != null && bitmapThumbnail != null) {
             val pathOriginal = ImageCreateManager.saveBitmapToJpeg(
@@ -255,11 +272,10 @@ class EditMemoViewModel : ViewModel() {
     }
 
     // 이미지 추가
-    fun addImageList(listAdd: List<Uri>) {
+    fun addImageList(listAdd: List<String>) {
         // uri 형태로 출력
         val list = RealmList<MemoImageFilePath>()
-        for (element in listAdd)
-            list.add(MemoImageFilePath(element.toString()))
+        listAdd.forEach { list.add(MemoImageFilePath(it)) }
         imageFileLinks.AddDatas(list)
     }
 
@@ -314,5 +330,9 @@ class EditMemoViewModel : ViewModel() {
             deleteList.removeAt(i)
         }
         alarmTimeList.value = deleteList
+    }
+
+    fun setCategory(nameCat: String) {
+        category.value = nameCat
     }
 }

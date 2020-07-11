@@ -24,7 +24,7 @@
         android:background="@drawable/borderline_layout"
         android:visibility="gone"
         android:padding="8dp"
-        android:text="@string/Checked"
+        android:text="@string/checked"
         app:layout_constraintEnd_toEndOf="@+id/imageItem"
         app:layout_constraintTop_toTopOf="@+id/imageItem" />
 

@@ -1,5 +1,7 @@
 package com.start3a.memoji.Model
 
+import android.util.Log
+import com.start3a.memoji.data.Category
 import com.start3a.memoji.data.MemoData
 import com.start3a.memoji.data.MemoImageFilePath
 import io.realm.Realm
@@ -14,6 +16,12 @@ class MemoDao(private val realm: Realm) {
     fun getAllMemos(): RealmResults<MemoData> {
         return realm.where(MemoData::class.java)
             .sort("date", Sort.DESCENDING)
+            .findAll()
+    }
+
+    fun getCategories(): RealmResults<Category> {
+        return realm.where(Category::class.java)
+            .sort("nameCat", Sort.ASCENDING)
             .findAll()
     }
 
@@ -94,6 +102,61 @@ class MemoDao(private val realm: Realm) {
         // 로컬 DB 데이터 비우기
         realm.executeTransaction {
             getAllMemos().deleteAllFromRealm()
+            getCategories().deleteAllFromRealm()
+        }
+    }
+
+    fun getAllCatMemos(nameCat: String): RealmResults<MemoData> {
+        return realm.where(MemoData::class.java)
+            .equalTo("category", nameCat)
+            .sort("date", Sort.DESCENDING)
+            .findAll()
+    }
+
+    fun addCategory(cat: Category) {
+        realm.executeTransaction {
+            it.copyToRealmOrUpdate(cat)
+        }
+    }
+
+    fun updateCategory(id: Long, newName: String) {
+        realm.executeTransaction {
+            val cat = it.where(Category::class.java)
+                .equalTo("id", id)
+                .findFirst()
+            cat?.nameCat = newName
+            it.copyToRealmOrUpdate(cat)
+        }
+    }
+
+    fun deleteCategory(id: Long) {
+        realm.executeTransaction {
+            it.where(Category::class.java)
+                .equalTo("id", id)
+                .findFirst()?.deleteFromRealm()
+        }
+    }
+
+    fun updateCatOfMemo(prevName: String, newName: String) {
+        realm.executeTransaction {
+            val list = realm.where(MemoData::class.java)
+                .equalTo("category", prevName)
+                .findAll()
+            list.forEach {
+                Log.d("TAG", list.size.toString())
+                Log.d("TAG", "${it.title} : ${it.category}")
+                it.category = newName
+            }
+            it.copyToRealmOrUpdate(list)
+        }
+    }
+
+    fun deleteCatOfMemo(nameCat: String) {
+        realm.executeTransaction {
+            val list = realm.where(MemoData::class.java)
+                .equalTo("category", nameCat)
+                .findAll()
+            list.deleteAllFromRealm()
         }
     }
 }

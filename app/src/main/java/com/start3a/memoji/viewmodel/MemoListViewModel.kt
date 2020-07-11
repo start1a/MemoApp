@@ -4,17 +4,29 @@ import android.content.Context
 import android.view.Menu
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.start3a.memoji.data.Category
 import com.start3a.memoji.data.MemoData
 import com.start3a.memoji.data.RealmLiveData
 import com.start3a.memoji.repository.Repository
 
 class MemoListViewModel : ViewModel() {
 
+    // Repository
+    private val repository = Repository()
+
     // UI
-    var mMenu: Menu? = null
-    var layout_memoList: MutableLiveData<Int> = MutableLiveData<Int>().apply { value = LAYOUT_LINEAR }
-    // 리스트 갱신 리스너
-    var listNotifyListener : (() -> Unit)? = null
+    var mActionMenu: Menu? = null
+    var layoutMemoList = MutableLiveData<Int>().apply { value = LAYOUT_LINEAR }
+    var curTab = MutableLiveData<String>().apply { value = "모든 메모" }
+    lateinit var navMenu: Menu
+
+    // 리스트
+    var memoListLiveData: RealmLiveData<MemoData> = RealmLiveData(repository.getAllCatMemos(curTab.value!!))
+    val categoryLiveData: RealmLiveData<Category> by lazy {
+        RealmLiveData(repository.getCategories())
+    }
+    var listNotifyListener: (() -> Unit)? = null
+    var newMemoListQueryListener: ((MutableList<MemoData>) -> Unit)? = null
 
     // 상수
     val LAYOUT_LINEAR = 0
@@ -26,15 +38,13 @@ class MemoListViewModel : ViewModel() {
     // 로그인
     var isSingingIn = false
 
-    // Repository
-    private val repository = Repository()
-
-    val memoListLiveData: RealmLiveData<MemoData> by lazy {
-        RealmLiveData(repository.getAllMemos())
+    fun setLayoutMemoList(type: Int) {
+        layoutMemoList.value = type
     }
 
-    fun setLayoutMemoList(type: Int) {
-        layout_memoList.value = type
+    fun setNewListQuery() {
+        memoListLiveData = RealmLiveData(repository.getAllCatMemos(curTab.value!!))
+        newMemoListQueryListener?.let { it(memoListLiveData.value!!) }
     }
 
     // 로그인 시 사용자 데이터 불러오기
@@ -44,6 +54,10 @@ class MemoListViewModel : ViewModel() {
 
     fun signOutUser() {
         repository.signOutUser(context)
+    }
+
+    fun setCurTab(name: String) {
+        curTab.value = name
     }
 
     override fun onCleared() {

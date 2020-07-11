@@ -50,7 +50,7 @@ class MemoImageFragment : Fragment() {
                 imgListView.adapter = listImageAdapter
             }
             // 이미지 리스트 갱신
-            VM.imageFileLinks.observe(this, Observer { files ->
+            VM.imageFileLinks.observe(viewLifecycleOwner, Observer { files ->
                 listImageAdapter.notifyDataSetChanged()
                 // 이미지가 없음
                 if (files.size != 0) noImageView.visibility = View.GONE
@@ -58,7 +58,7 @@ class MemoImageFragment : Fragment() {
             })
 
             // T: 수정모드, F: 보기모드 UI 갱신
-            VM.editable.observe(this, Observer { editable ->
+            VM.editable.observe(viewLifecycleOwner, Observer { editable ->
                 listImageAdapter.let {
                     if (!editable) it.deleteImageList.clear()
                     it.editable = editable
@@ -85,7 +85,7 @@ class MemoImageFragment : Fragment() {
             }
 
             // 이미지 삭제 대상 모두 체크
-            VM.AllContentSelectListener = {
+            VM.allContentSelectListener = {
                 val list = listImageAdapter.deleteImageList
                 val sizeImageList = VM.imageFileLinks.value!!.size
                 // 내림차순 정렬에 유리하도록 거꾸로 추가

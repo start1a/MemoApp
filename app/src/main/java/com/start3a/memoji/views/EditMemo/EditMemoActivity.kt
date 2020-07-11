@@ -23,6 +23,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModelProvider
+import com.start3a.memoji.CategoryActivity
 import com.start3a.memoji.R
 import com.start3a.memoji.viewmodel.EditMemoViewModel
 import com.start3a.memoji.views.EditMemo.Alarm.MemoAlarmFragment
@@ -43,29 +44,25 @@ import kotlin.coroutines.CoroutineContext
 
 class EditMemoActivity : AppCompatActivity(), CoroutineScope {
 
-    companion object {
-        // private lateinit var photoURI: Uri
-        val REQUEST_IMAGE_GALLERY = 0
-        val REQUEST_IMAGE_CAMERA = 1
-        val REQUEST_IMAGE_DOWNLOAD = 2
-    }
+    // private lateinit var photoURI: Uri
+    val REQUEST_IMAGE_GALLERY = 0
+    val REQUEST_IMAGE_CAMERA = 1
+    val REQUEST_IMAGE_DOWNLOAD = 2
+    val REQUEST_SELECT_CATEGORY = 3
 
     private var viewModel: EditMemoViewModel? = null
     private val dialogCalendar = Calendar.getInstance()
-    private val TAG = "EditMemoActivity1"
+    private var dialogInterface: DialogInterface? = null
 
     // 코루틴
     private lateinit var mJob: Job
     private val handler = CoroutineExceptionHandler { _, throwable ->
-        Log.e("Exception", ":" + throwable)
+        Log.e("Exception", ":$throwable")
     }
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + mJob
 
     // 프래그먼트
-    private lateinit var fragText: MemoTextFragment
-    private lateinit var fragImage: MemoImageFragment
-    private lateinit var fragAlarm: MemoAlarmFragment
 
     // 이미지 처리 데이터
     private lateinit var currentPhotoPath: String
@@ -77,8 +74,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_memo)
-        setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayShowTitleEnabled(false)
+        setSupportActionBar(toolbarEdit)
         mJob = Job()
 
         viewModel = application!!.let { app ->
@@ -91,12 +87,16 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                     VM.setEditable(id == null)
                     // 액티비티, 프래그먼트 모두 datePicker 호출 가능
                     VM.datePickerShowListener = { openDateDialog() }
+                    VM.category.value = VM.memoData.category
                 }
         }
-        fragText = MemoTextFragment()
-        fragImage = MemoImageFragment()
-        fragAlarm = MemoAlarmFragment()
         setFragment()
+
+        // 카테고리
+        viewModel!!.category.observe(this, androidx.lifecycle.Observer {
+            if (it.isEmpty()) supportActionBar?.title = "카테고리 없음"
+            else supportActionBar?.title = it
+        })
 
         // 하단 탭 클릭 시
         bottom__navigation_edit_memo.setOnNavigationItemSelectedListener { menu ->
@@ -142,6 +142,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
     override fun onDestroy() {
         super.onDestroy()
         mJob.cancel()
+        dialogInterface?.dismiss()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -190,68 +191,17 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
 
                 android.R.id.home -> VM.setEditable(false)
 
-                R.id.action_share -> {
-
-                    val alertDialog = AlertDialog.Builder(this)
-                    val view = LayoutInflater.from(this).inflate(R.layout.dialog_share_memo, null)
-
-                    // 텍스트 공유
-                    view.findViewById<Button>(R.id.btnShareText).setOnClickListener {
-                        if (VM.isExistText()) {
-                            val intent = Intent().apply {
-                                action = Intent.ACTION_SEND
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_SUBJECT, VM.titleTemp)
-                                putExtra(Intent.EXTRA_TEXT, VM.contentTemp)
-                            }
-                            startActivity(intent)
-                        } else Toast.makeText(this, "공유할 텍스트가 없습니다.", Toast.LENGTH_SHORT).show()
-                    }
-
-                    // 이미지 공유
-                    view.findViewById<Button>(R.id.btnShareImage).setOnClickListener {
-                        if (VM.isExistImage()) {
-                            ShareImages()
-                        } else Toast.makeText(this, "공유할 이미지가 없습니다.", Toast.LENGTH_SHORT).show()
-                    }
-
-                    // 텍스트 + 이미지 공유
-                    view.findViewById<Button>(R.id.btnShareTextAndImage).setOnClickListener {
-
-                        // 두 가지 모두 전송하도록 반드시 이미지가 존재할 경우에만 수행
-                        if (VM.isExistText() && VM.isExistImage()) {
-                            // 이미지 전송
-                            ShareImages()
-                            // 텍스트 클립보드 복사
-                            val clipboardManager =
-                                getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            val clipData = ClipData.newPlainText(
-                                "MemoText",
-                                VM.titleTemp + "\n\n" + VM.contentTemp
-                            )
-                            clipboardManager.setPrimaryClip(clipData)
-                            Toast.makeText(
-                                this,
-                                "텍스트가 클립보드에 복사되었습니다.\n텍스트를 붙여넣기 해주세요.",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        } else Toast.makeText(this, "공유할 텍스트 혹은 이미지가 없습니다.", Toast.LENGTH_SHORT)
-                            .show()
-                    }
-
-                    alertDialog
-                        .setView(view)
-                        .setTitle("공유")
-                        .show()
-                }
+                R.id.action_share -> menuShareMemo()
 
                 R.id.action_delete -> DialogDeleteMemo()
+
+                R.id.action_category -> DialogSelectCategory()
 
                 R.id.action_add_image -> menuAddImage()
 
                 R.id.action_delete_image -> VM.setEditable(true)
 
-                R.id.action_delete_sweep_content -> VM.AllContentSelectListener()
+                R.id.action_delete_sweep_content -> VM.allContentSelectListener()
 
                 R.id.action_delete_data -> {
                     when (VM.fragBtnClicked.value) {
@@ -268,10 +218,28 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
 
                 R.id.action_delete_alarm -> VM.setEditable(true)
 
+
                 else -> return super.onOptionsItemSelected(item)
             }
         }
         return true
+    }
+
+    private fun DialogSelectCategory() {
+        val alertDialog = AlertDialog.Builder(this)
+
+        dialogInterface = alertDialog
+            .setTitle("카테고리 선택")
+            .setSingleChoiceItems(arrayOf("선택", "제거"), -1) { _, index ->
+                if (index == 0) {
+                    val intent = Intent(applicationContext, CategoryActivity::class.java).apply {
+                        putExtra("memoID", viewModel!!.memoData.id)
+                    }
+                    startActivityForResult(intent, REQUEST_SELECT_CATEGORY)
+                } else viewModel!!.setCategory("")
+                dialogInterface?.dismiss()
+            }
+            .show()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -281,14 +249,13 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                 if (resultCode == Activity.RESULT_OK && data != null) {
                     val uri = data.data
                     val clipData = data.clipData
-                    val listUri = mutableListOf<Uri>()
+                    val listUri = mutableListOf<String>()
                     // 2개 이상
                     if (clipData != null) {
                         var numNullBitmap = 0
                         for (i in 0 until clipData.itemCount) {
-                            Log.d(TAG, clipData.getItemAt(i).uri.toString())
                             val item = clipData.getItemAt(i).uri
-                            if (item != null) listUri.add(item)
+                            if (item != null) listUri.add(item.toString())
                             else ++numNullBitmap
                         }
                         if (numNullBitmap > 0) {
@@ -302,7 +269,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                     }
                     // 1개
                     else if (uri != null) {
-                        listUri.add(uri)
+                        listUri.add(uri.toString())
                         viewModel!!.addImageList(listUri)
                     }
                 }
@@ -310,24 +277,26 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
 
             REQUEST_IMAGE_CAMERA -> {
                 if (resultCode == Activity.RESULT_OK) {
-                    viewModel!!.addImageList(listOf(photoURI))
+                    viewModel!!.addImageList(listOf(photoURI.toString()))
                 } else Toast.makeText(this, "촬영 이미지 불러오기 실패", Toast.LENGTH_LONG).show()
             }
 
             REQUEST_IMAGE_DOWNLOAD -> {
-                Log.d(TAG, "request image download")
-                if (data == null) Log.d(TAG, "data is null")
                 if (resultCode == Activity.RESULT_OK && data != null) {
-                    Log.d(TAG, "result is not null")
-                    data.getStringArrayListExtra("resImages")?.let {
-                        Log.d(TAG, "data is not null")
-                        if (it.size > 0) Log.d(TAG, "data is over 0")
-                        val listUri = mutableListOf<Uri>()
-                        it.forEach {
-                            listUri.add(Uri.parse(it))
+                    data.getStringArrayListExtra("resImages")?.let { list ->
+                        val listUri = mutableListOf<String>()
+                        list.forEach {
+                            listUri.add(it)
                         }
                         viewModel!!.addImageList(listUri)
                     }
+                }
+            }
+
+            REQUEST_SELECT_CATEGORY -> {
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    val nameCat = data.getStringExtra("selectedCat") ?: ""
+                    viewModel!!.setCategory(nameCat)
                 }
             }
         }
@@ -349,17 +318,17 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
             R.id.action_fragment_text ->
                 supportFragmentManager.beginTransaction().replace(
                     R.id.memoDetailLayout,
-                    fragText
+                    MemoTextFragment()
                 ).commit()
             R.id.action_fragment_image ->
                 supportFragmentManager.beginTransaction().replace(
                     R.id.memoDetailLayout,
-                    fragImage
+                    MemoImageFragment()
                 ).commit()
             R.id.action_fragment_alarm ->
                 supportFragmentManager.beginTransaction().replace(
                     R.id.memoDetailLayout,
-                    fragAlarm
+                    MemoAlarmFragment()
                 ).commit()
         }
     }
@@ -467,7 +436,6 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
     }
 
     private fun menuAddImage() {
-        var dialogInterface: DialogInterface? = null
         val alertDialog = AlertDialog.Builder(this)
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_insert_image, null)
 
@@ -530,7 +498,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
         // URL에서 가져오기
         view.findViewById<Button>(R.id.btnURL).setOnClickListener {
             dialogInterface?.dismiss()
-            val viewUrl = LayoutInflater.from(this).inflate(R.layout.dialog_edit_url, null)
+            val viewUrl = LayoutInflater.from(this).inflate(R.layout.dialog_edit_data, null)
             val editUrl = viewUrl.findViewById<EditText>(R.id.editURL)
 
             dialogInterface = alertDialog
@@ -539,13 +507,13 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                 .show()
 
             // 추가
-            viewUrl.findViewById<Button>(R.id.btnURLImageAdd).setOnClickListener {
+            viewUrl.findViewById<Button>(R.id.btnDone).setOnClickListener {
                 val url = editUrl.text.toString()
                 launch(handler) {
                     LoadingProgressBar.Progress_ProcessingData(this@EditMemoActivity)
                     if (GetImageFromURL(url)) {
-                        val list = listOf<Uri>(
-                            Uri.parse(editUrl.text.toString())
+                        val list = listOf(
+                            editUrl.text.toString()
                         )
                         viewModel!!.addImageList(list)
                         Toast.makeText(
@@ -577,5 +545,61 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
             .setView(view)
             .setTitle("이미지 추가")
             .show()
+    }
+
+    private fun menuShareMemo() {
+        viewModel!!.let { VM ->
+            val alertDialog = AlertDialog.Builder(this)
+            val view = LayoutInflater.from(this).inflate(R.layout.dialog_share_memo, null)
+
+            // 텍스트 공유
+            view.findViewById<Button>(R.id.btnShareText).setOnClickListener {
+                if (VM.isExistText()) {
+                    val intent = Intent().apply {
+                        action = Intent.ACTION_SEND
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_SUBJECT, VM.titleTemp)
+                        putExtra(Intent.EXTRA_TEXT, VM.contentTemp)
+                    }
+                    startActivity(intent)
+                } else Toast.makeText(this, "공유할 텍스트가 없습니다.", Toast.LENGTH_SHORT).show()
+            }
+
+            // 이미지 공유
+            view.findViewById<Button>(R.id.btnShareImage).setOnClickListener {
+                if (VM.isExistImage()) {
+                    ShareImages()
+                } else Toast.makeText(this, "공유할 이미지가 없습니다.", Toast.LENGTH_SHORT).show()
+            }
+
+            // 텍스트 + 이미지 공유
+            view.findViewById<Button>(R.id.btnShareTextAndImage).setOnClickListener {
+
+                // 두 가지 모두 전송하도록 반드시 이미지가 존재할 경우에만 수행
+                if (VM.isExistText() && VM.isExistImage()) {
+                    // 이미지 전송
+                    ShareImages()
+                    // 텍스트 클립보드 복사
+                    val clipboardManager =
+                        getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clipData = ClipData.newPlainText(
+                        "MemoText",
+                        VM.titleTemp + "\n\n" + VM.contentTemp
+                    )
+                    clipboardManager.setPrimaryClip(clipData)
+                    Toast.makeText(
+                        this,
+                        "텍스트가 클립보드에 복사되었습니다.\n텍스트를 붙여넣기 해주세요.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                } else Toast.makeText(this, "공유할 텍스트 혹은 이미지가 없습니다.", Toast.LENGTH_SHORT)
+                    .show()
+            }
+
+            alertDialog
+                .setView(view)
+                .setTitle("공유")
+                .show()
+        }
     }
 }

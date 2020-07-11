@@ -18,7 +18,6 @@ class SearchedImageListAdapter(private val list: MutableList<NaverImage>) :
     lateinit var selectionList: MutableList<NaverImage>
     lateinit var itemClickListener: (list: MutableList<NaverImage>, index: Int) -> Unit
 
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ListViewHolder {
         val view =
             LayoutInflater.from(parent.context).inflate(R.layout.item_image_searched, parent, false)
@@ -48,7 +47,6 @@ class SearchedImageListAdapter(private val list: MutableList<NaverImage>) :
                     textNum.visibility = View.VISIBLE
                     selectionList.add(list[position])
                 }
-                Log.d("TAG", selectionList.toString())
             }
 
             imgBtnDetail.setOnClickListener {

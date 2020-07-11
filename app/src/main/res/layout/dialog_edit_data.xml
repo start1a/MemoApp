@@ -13,7 +13,7 @@
         />
 
     <Button
-        android:id="@+id/btnURLImageAdd"
+        android:id="@+id/btnDone"
         android:text="추가"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>

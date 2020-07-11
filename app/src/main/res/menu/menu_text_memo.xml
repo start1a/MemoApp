@@ -21,4 +21,9 @@
         android:icon="@drawable/ic_delete_black_24dp"
         app:showAsAction="ifRoom"/>
 
+    <item
+        android:id="@+id/action_category"
+        android:title="카테고리 설정"
+        app:showAsAction="never"/>
+
 </menu>

@@ -52,7 +52,7 @@
         app:srcCompat="@drawable/ic_alarm_exist_24dp" />
 
     <TextView
-        android:id="@+id/textDate"
+        android:id="@+id/textCategory"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/light_black_text"

@@ -5,7 +5,7 @@ import io.realm.RealmChangeListener
 import io.realm.RealmObject
 import io.realm.RealmResults
 
-// DB에서 쿼리한 메모 리스트 저장
+// DB에서 쿼리한 리스트 저장
 class RealmLiveData<T : RealmObject>(private val realmResults: RealmResults<T>) :
     LiveData<RealmResults<T>>() {
 

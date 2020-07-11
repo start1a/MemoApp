@@ -8,7 +8,6 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface RetrofitAPI {
-
     @GET("search/{type}")
     fun requestSearchImage(
         @Header("X-Naver-Client-Id") clientId: String = "clientId",
@@ -18,5 +17,4 @@ interface RetrofitAPI {
         @Query("start") page: Int,
         @Query("sort") sort: String = "sim"
     ): Observable<ImgObjFromNaver>
-
 }

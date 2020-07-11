@@ -9,6 +9,7 @@ import com.start3a.memoji.MemoAlarmTool
 import com.start3a.memoji.Model.CloudStorageDao
 import com.start3a.memoji.Model.FireStoreDao
 import com.start3a.memoji.Model.MemoDao
+import com.start3a.memoji.data.Category
 import com.start3a.memoji.data.MemoData
 import com.start3a.memoji.data.MemoImageFilePath
 import com.start3a.memoji.views.LoadingProgressBar
@@ -26,9 +27,11 @@ class Repository {
         var userID: String? = FirebaseAuth.getInstance().currentUser?.email
         const val FILESDIR = "data/user/0/com.start3a.memoji/files"
         const val MEMOS = "Memos"
+        const val CATEGORIES = "Categories"
         const val THUMBNAIL_PATH = "ImageThumbnail"
         const val ORIGINAL_PATH = "ImageOriginal"
     }
+
     // 로컬 DB
     private val mRealm: Realm by lazy {
         Realm.getDefaultInstance()
@@ -80,7 +83,10 @@ class Repository {
         mStorageDao.getImageFile("$USERS/$userID/$dirMemos", dirMemos, notifyListener)
     }
 
-    fun getAllMemos(): RealmResults<MemoData> = mRealmDao.getAllMemos()
+    fun getAllCatMemos(nameCat: String): RealmResults<MemoData> {
+        return if (nameCat == "모든 메모") mRealmDao.getAllMemos()
+        else mRealmDao.getAllCatMemos(nameCat)
+    }
 
     fun loadMemo(id: String): MemoData = mRealmDao.getMemoByID(id)
 
@@ -125,6 +131,41 @@ class Repository {
                 }
             }
             dirFile.delete()
+        }
+    }
+
+    fun getCategories(): RealmResults<Category> {
+        return mRealmDao.getCategories()
+    }
+
+    fun addCategory(cat: Category) {
+        mRealmDao.addCategory(cat)
+        mFireStoreDao.addCategory(cat)
+    }
+
+    fun updateCategory(cat: Category, newName: String) {
+        val nameCat = cat.nameCat
+        val id = cat.id
+        mRealmDao.run {
+            updateCatOfMemo(nameCat, newName)
+            updateCategory(id, newName)
+        }
+        mFireStoreDao.run {
+            updateCatOfMemo(nameCat, newName)
+            updateCategory(id, newName)
+        }
+    }
+
+    fun deleteCategory(cat: Category) {
+        val nameCat = cat.nameCat
+        val id = cat.id
+        mRealmDao.run {
+            deleteCatOfMemo(nameCat)
+            deleteCategory(id)
+        }
+        mFireStoreDao.run {
+            deleteCatOfMemo(nameCat)
+            deleteCategory(id)
         }
     }
 

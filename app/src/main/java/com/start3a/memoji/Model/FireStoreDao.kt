@@ -6,10 +6,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QueryDocumentSnapshot
 import com.start3a.memoji.MemoAlarmTool
-import com.start3a.memoji.data.ImgFilePathForFireStore
-import com.start3a.memoji.data.MemoData
-import com.start3a.memoji.data.MemoDataForFireStore
-import com.start3a.memoji.data.MemoImageFilePath
+import com.start3a.memoji.data.*
 import com.start3a.memoji.repository.Repository
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
@@ -32,7 +29,7 @@ class FireStoreDao(private val mFireStore: FirebaseFirestore) {
         val list = mutableListOf<MemoData>()
 
         val completeTaskFunction = Function<QueryDocumentSnapshot, MemoData> { doc ->
-            val objFireStore = doc.toObject(MemoDataForFireStore::class.java)
+            val objFireStore = doc.toObject(MemoDataFireStore::class.java)
             getMemoFireStoreToRealm(objFireStore)
         }
 
@@ -90,16 +87,16 @@ class FireStoreDao(private val mFireStore: FirebaseFirestore) {
             }
     }
 
-    private fun getMemoFireStoreToRealm(memo: MemoDataForFireStore): MemoData {
+    private fun getMemoFireStoreToRealm(memo: MemoDataFireStore): MemoData {
         return MemoData(
-            memo.id ?: "",
-            memo.title ?: "",
-            memo.content ?: "",
-            memo.summary ?: "",
-            memo.date ?: Date(),
+            memo.id,
+            memo.title,
+            memo.content,
+            memo.summary,
+            memo.date,
             // 이미지
             RealmList<MemoImageFilePath>().apply {
-                memo.imageFileLinks?.let { images ->
+                memo.imageFileLinks.let { images ->
                     for (imageData in images) {
                         add(
                             MemoImageFilePath(
@@ -113,12 +110,13 @@ class FireStoreDao(private val mFireStore: FirebaseFirestore) {
             },
             // 알람
             RealmList<Date>().apply {
-                memo.alarmTimeList?.let { alarms ->
+                memo.alarmTimeList.let { alarms ->
                     for (alarmData in alarms) {
                         add(alarmData.toDate())
                     }
                 }
-            }
+            },
+            memo.category
         )
     }
 
@@ -147,18 +145,76 @@ class FireStoreDao(private val mFireStore: FirebaseFirestore) {
             }
         )
 
-        mFireStore.collection(Repository.USERS).document(Repository.userID!!)
+        val doc = mFireStore.collection(Repository.USERS).document(Repository.userID!!)
             .collection(Repository.MEMOS).document(memo.id)
-            .set(docMemoData)
-            .addOnSuccessListener { Log.d(TAG, "DocumentSnapshot successfully written!") }
+        doc.set(docMemoData)
             .addOnFailureListener { e -> Log.w(TAG, "Error writing document", e) }
+        doc.update("category", memo.category)
     }
 
     fun deleteMemo(memoID: String) {
         mFireStore.collection(Repository.USERS).document(Repository.userID!!)
             .collection(Repository.MEMOS).document(memoID)
             .delete()
-            .addOnSuccessListener { Log.d(TAG, "DocumentSnapshot successfully deleted!") }
             .addOnFailureListener { e -> Log.w(TAG, "Error deleting document", e) }
+    }
+
+    fun addCategory(cat: Category) {
+        val docCat = hashMapOf(
+            "id" to cat.id.toString(),
+            "nameCat" to cat.nameCat
+        )
+
+        mFireStore.collection(Repository.USERS).document(Repository.userID!!)
+            .collection(Repository.CATEGORIES).document(cat.id.toString())
+            .set(docCat)
+            .addOnFailureListener { e -> Log.w(TAG, "Error writing document", e) }
+    }
+
+    fun updateCategory(catID: Long, newName: String) {
+        mFireStore.collection(Repository.USERS).document(Repository.userID!!)
+            .collection(Repository.CATEGORIES).document(catID.toString())
+            .update("nameCat", newName)
+            .addOnFailureListener { e -> Log.w(TAG, "Error writing document", e) }
+    }
+
+    fun deleteCategory(catID: Long) {
+        mFireStore.collection(Repository.USERS).document(Repository.userID!!)
+            .collection(Repository.CATEGORIES).document(catID.toString())
+            .delete()
+            .addOnFailureListener { e -> Log.w(TAG, "Error writing document", e) }
+    }
+
+    fun updateCatOfMemo(prevName: String, newName: String) {
+        val userRef = mFireStore.collection(Repository.USERS).document(Repository.userID!!)
+            .collection(Repository.MEMOS)
+
+        userRef.whereEqualTo("category", prevName)
+            .get()
+            .addOnSuccessListener { docs ->
+                docs.forEach {
+                    Log.d(TAG, it.data.get("title").toString() + " : " + it.data.get("category"))
+                    it.reference.update("category", newName)
+                }
+            }
+            .addOnFailureListener {
+                Log.w(TAG, "update CatOfMemo failed")
+            }
+    }
+
+    fun deleteCatOfMemo(nameCat: String) {
+        val userRef = mFireStore.collection(Repository.USERS).document(Repository.userID!!)
+            .collection(Repository.MEMOS)
+
+        userRef.whereEqualTo("category", nameCat)
+            .get()
+            .addOnSuccessListener {
+                it.forEach {
+                    it.reference.update("category", "")
+                }
+            }
+            .addOnFailureListener {
+                Log.w(TAG, "delete CatOfMemo failed")
+            }
     }
 }

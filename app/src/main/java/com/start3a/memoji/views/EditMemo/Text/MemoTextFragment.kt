@@ -57,10 +57,10 @@ class MemoTextFragment : Fragment() {
         })
 
         viewModel!!.let { VM ->
-            VM.title.observe(this, Observer { editTitle.setText(it) })
-            VM.content.observe(this, Observer { editContent.setText(it) })
+            VM.title.observe(viewLifecycleOwner, Observer { editTitle.setText(it) })
+            VM.content.observe(viewLifecycleOwner, Observer { editContent.setText(it) })
             // T: 수정모드, F: 보기모드
-            VM.editable.observe(this, Observer { mode ->
+            VM.editable.observe(viewLifecycleOwner, Observer { mode ->
                 setEditMode(editTitle, mode)
                 setEditMode(editContent, mode)
 
@@ -76,7 +76,7 @@ class MemoTextFragment : Fragment() {
                 }
             })
             // 컨텐츠 모두 선택
-            VM.AllContentSelectListener = {
+            VM.allContentSelectListener = {
                 AlertDialog.Builder(activity!!)
                     .setTitle("제목과 내용을 모두 삭제하시겠습니까?")
                     .setNegativeButton("취소", null)

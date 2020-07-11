@@ -51,7 +51,7 @@ class MemoAlarmFragment : Fragment() {
             }
 
             // 리스트 갱신
-            VM.alarmTimeList.observe(this, Observer {
+            VM.alarmTimeList.observe(viewLifecycleOwner, Observer {
                 listAlarmAdapter.notifyDataSetChanged()
                 // 추가 버튼
                 if (it.size > 0) textInformNoAlarm.visibility = View.GONE
@@ -59,7 +59,7 @@ class MemoAlarmFragment : Fragment() {
             })
 
             // 수정 모드
-            VM.editable.observe(this, Observer { editable ->
+            VM.editable.observe(viewLifecycleOwner, Observer { editable ->
                 listAlarmAdapter.let {
                     // 알람 내용 수정 모드
                     if (!editable) it.deleteAlarmList.clear()
@@ -70,7 +70,7 @@ class MemoAlarmFragment : Fragment() {
             })
 
             // 알람 삭제 대상 모두 체크
-            VM.AllContentSelectListener = {
+            VM.allContentSelectListener = {
                 val list = listAlarmAdapter.deleteAlarmList
                 val sizeAlarmList = VM.alarmTimeList.value!!.size
                 // 내림차순 정렬에 유리하도록 거꾸로 추가

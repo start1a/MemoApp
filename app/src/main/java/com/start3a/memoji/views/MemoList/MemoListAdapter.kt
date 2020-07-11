@@ -73,7 +73,8 @@ class MemoListAdapter(private val list: MutableList<MemoData>, val layoutId: Int
                 textSummary.text = list[position].summary
             } else textSummary.visibility = View.GONE
             // 최근 수정 날짜
-            textDate.text = GetDateFormat(list[position].date)
+            textCategory.text = list[position].category
+            textCategory.setBackgroundResource(R.drawable.borderline_layout)
             // 태그
             // intent 전송
             tag = list[position].id
@@ -84,8 +85,4 @@ class MemoListAdapter(private val list: MutableList<MemoData>, val layoutId: Int
         Glide.with(view)
             .load(imagePath)
             .error(R.drawable.icon_error)
-
-    private fun GetDateFormat(date: Date): String {
-        return SimpleDateFormat("yy.MM.dd HH:mm").format(date)
-    }
 }

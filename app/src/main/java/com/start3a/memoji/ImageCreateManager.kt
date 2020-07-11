@@ -7,6 +7,7 @@ import android.net.Uri
 import android.util.Log
 import com.start3a.memoji.repository.Repository
 import java.io.*
+import java.net.URL
 import java.util.*
 
 class ImageCreateManager {
@@ -85,27 +86,29 @@ class ImageCreateManager {
             return ""
         }
 
-        fun getURIToBitmap(context: Context, uri: Uri): Bitmap? {
-            try {
-                val ist = context.contentResolver.openInputStream(uri)
-                return BitmapFactory.decodeStream(ist)
+        fun getURIToBitmap(context: Context, imgSrc: String): Bitmap? {
+            return try {
+                val ist = context.contentResolver.openInputStream(Uri.parse(imgSrc))
+                BitmapFactory.decodeStream(ist)
             } catch (e: FileNotFoundException) {
-                Log.e(TAG, "URI OpenStream Failed" + e.printStackTrace())
+                Log.e(TAG, "URI OpenStream Failed : " + e.printStackTrace())
                 e.printStackTrace()
-                return null
+                null
             }
         }
 
-        fun getURIToBitmapResize(context: Context, uri: Uri): Bitmap? {
-            try {
-                val ist1 = context.contentResolver.openInputStream(uri)
-                return ist1?.run {
-                    val ist2 = context.contentResolver.openInputStream(uri)
+        fun getURIToBitmapResize(context: Context, imgSrc: String): Bitmap? {
+            return try {
+                val uri = Uri.parse(imgSrc)
+                val resv =  context.contentResolver
+                val ist1 = resv.openInputStream(uri)
+                ist1?.run {
+                    val ist2 = resv.openInputStream(uri)
                     decodeSampledBitmapFromResource(this, ist2!!, VALUE_RESIZE, VALUE_RESIZE)
                 }
             } catch (e: FileNotFoundException) {
                 e.printStackTrace()
-                return null
+                null
             }
         }
 
@@ -116,6 +119,29 @@ class ImageCreateManager {
             if (!fileThumbnail.exists()) fileThumbnail.mkdirs()
             val fileOriginal = File("$dirParent/${Repository.ORIGINAL_PATH}")
             if (!fileOriginal.exists()) fileOriginal.mkdirs()
+        }
+
+        fun getURLToBitmap(imgSrc: String): Bitmap? {
+            return try {
+                val ist = URL(imgSrc).openStream()
+                BitmapFactory.decodeStream(ist)
+            } catch (e: IOException) {
+                e.printStackTrace()
+                null
+            }
+        }
+
+        fun getURLToBitmapResize(imgSrc: String): Bitmap? {
+            return try {
+                val ist1 = URL(imgSrc).openStream()
+                val ist2 = URL(imgSrc).openStream()
+                ist1?.run {
+                    decodeSampledBitmapFromResource(this, ist2!!, VALUE_RESIZE, VALUE_RESIZE)
+                }
+            } catch (e: IOException) {
+                e.printStackTrace()
+                null
+            }
         }
     }
 }
