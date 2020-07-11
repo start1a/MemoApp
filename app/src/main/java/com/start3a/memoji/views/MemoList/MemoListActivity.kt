@@ -111,6 +111,7 @@ class MemoListActivity : AppCompatActivity() {
 
         if (shouldStartSignIn())
             startSignIn()
+        else updateDrawerCategory()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -166,12 +167,6 @@ class MemoListActivity : AppCompatActivity() {
 
             REQUEST_CATEGORY -> {
                 viewModel!!.setCurTab(getString(R.string.none))
-                if (resultCode == Activity.RESULT_OK && data != null) {
-                    if (data.getBooleanExtra("isChangedCat", false)) {
-                        updateDrawerCategory()
-                        viewModel!!.listNotifyListener?.let { it() }
-                    }
-                }
             }
         }
     }
@@ -207,12 +202,13 @@ class MemoListActivity : AppCompatActivity() {
     }
 
     private fun updateDrawerCategory() {
-        val menu = viewModel!!.navMenu
-        menu.clear()
-        menu.add(R.id.groupCat, R.id.nav_all_memo, Menu.NONE, R.string.menu_all_memo)
-        menu.add(R.id.groupEdit, R.id.nav_add_cat, Menu.NONE, R.string.add_cat)
-        viewModel!!.categoryLiveData.value?.forEach {
-            menu.add(R.id.groupCat, it.id.toInt(), Menu.NONE, it.nameCat)
+        viewModel!!.navMenu.run {
+            clear()
+            add(R.id.groupCat, R.id.nav_all_memo, Menu.NONE, R.string.menu_all_memo)
+            add(R.id.groupEdit, R.id.nav_add_cat, Menu.NONE, R.string.add_cat)
+            viewModel!!.categoryLiveData.value?.forEach {
+                add(R.id.groupCat, it.id.toInt(), Menu.NONE, it.nameCat)
+            }
         }
     }
 }

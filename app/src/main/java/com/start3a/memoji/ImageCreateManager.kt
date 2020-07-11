@@ -126,7 +126,7 @@ class ImageCreateManager {
                 val ist = URL(imgSrc).openStream()
                 BitmapFactory.decodeStream(ist)
             } catch (e: IOException) {
-                e.printStackTrace()
+                Log.d(TAG, "IOException : " + e.printStackTrace().toString())
                 null
             }
         }
@@ -134,12 +134,12 @@ class ImageCreateManager {
         fun getURLToBitmapResize(imgSrc: String): Bitmap? {
             return try {
                 val ist1 = URL(imgSrc).openStream()
-                val ist2 = URL(imgSrc).openStream()
                 ist1?.run {
+                    val ist2 = URL(imgSrc).openStream()
                     decodeSampledBitmapFromResource(this, ist2!!, VALUE_RESIZE, VALUE_RESIZE)
                 }
             } catch (e: IOException) {
-                e.printStackTrace()
+                Log.d(TAG, "IOException : " + e.printStackTrace().toString())
                 null
             }
         }

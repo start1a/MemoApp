@@ -12,7 +12,6 @@ object RetrofitService {
     private val retrofit = Retrofit.Builder()
         .baseUrl("https://openapi.naver.com/v1/")
         .addConverterFactory(GsonConverterFactory.create())
-            // Rxjava3 Retorift 연결 어댑터
         .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
         .build()
 }
