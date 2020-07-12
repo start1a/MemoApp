@@ -182,16 +182,16 @@ class EditMemoViewModel : ViewModel() {
                 val deleteIndexList = mutableListOf<Int>()
                 for (i in 0 until alarmTimeListValue.size) {
                     val time = alarmTimeListValue[i]!!
-                    // 현재 이후 알람 AND 신규 생성 알람
-                    if (time.after(Date()) && !alarmTimeListTemp.contains(time)) {
-                        MemoAlarmTool.addAlarm(context, memoData.id, time)
+                    // 현재 이후 알람
+                    if (time.after(Date())) {
+                        // 신규 생성 알람
+                        if (!alarmTimeListTemp.contains(time))
+                            MemoAlarmTool.addAlarm(context, memoData.id, time)
                     }
                     // 시간이 지난 알람은 제거 리스트에 추가됨
-                    // 나중에 삭제하는 이유 : ConcurrentModificationException
+                    // ConcurrentModificationException 방지
                     // 어떤 스레드가 Iterator가 반복중인 Collection을 수정하려 할 때 발생
-                    else {
-                        deleteIndexList.add(i)
-                    }
+                    else deleteIndexList.add(i)
                 }
                 // 지난 알람 삭제
                 for (i in 0 until deleteIndexList.size)
@@ -222,8 +222,7 @@ class EditMemoViewModel : ViewModel() {
         if (imgSrc.startsWith("content://")) {
             bitmapOriginal = ImageCreateManager.getURIToBitmap(context, imgSrc)
             bitmapThumbnail = ImageCreateManager.getURIToBitmapResize(context, imgSrc)
-        }
-        else if (imgSrc.startsWith("http")) {
+        } else if (imgSrc.startsWith("http")) {
             bitmapOriginal = ImageCreateManager.getURLToBitmap(imgSrc)
             bitmapThumbnail = ImageCreateManager.getURLToBitmapResize(imgSrc)
         }
