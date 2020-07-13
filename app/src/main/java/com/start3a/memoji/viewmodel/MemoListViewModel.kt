@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.Menu
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.start3a.memoji.R
 import com.start3a.memoji.data.Category
 import com.start3a.memoji.data.MemoData
 import com.start3a.memoji.data.RealmLiveData
@@ -17,11 +18,12 @@ class MemoListViewModel : ViewModel() {
     // UI
     var mActionMenu: Menu? = null
     var layoutMemoList = MutableLiveData<Int>().apply { value = LAYOUT_LINEAR }
-    var curTab = MutableLiveData<String>().apply { value = "모든 메모" }
+    var curTab = MutableLiveData<String>().apply { value = "" }
     lateinit var navMenu: Menu
 
     // 리스트
-    var memoListLiveData: RealmLiveData<MemoData> = RealmLiveData(repository.getAllCatMemos(curTab.value!!))
+    var memoListLiveData: RealmLiveData<MemoData> =
+        RealmLiveData(repository.getAllCatMemos(curTab.value!!))
     val categoryLiveData: RealmLiveData<Category> by lazy {
         RealmLiveData(repository.getCategories())
     }
@@ -57,7 +59,9 @@ class MemoListViewModel : ViewModel() {
     }
 
     fun setCurTab(name: String) {
-        curTab.value = name
+        val strAllMemo = context.resources.getString(R.string.menu_all_memo)
+        if (name == strAllMemo) curTab.value = ""
+        else curTab.value = name
     }
 
     override fun onCleared() {

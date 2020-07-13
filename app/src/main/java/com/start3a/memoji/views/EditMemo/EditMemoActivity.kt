@@ -23,14 +23,14 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModelProvider
-import com.start3a.memoji.CategoryActivity
+import com.start3a.memoji.views.Category.CategoryActivity
 import com.start3a.memoji.R
 import com.start3a.memoji.viewmodel.EditMemoViewModel
 import com.start3a.memoji.views.EditMemo.Alarm.MemoAlarmFragment
 import com.start3a.memoji.views.EditMemo.Image.MemoImageFragment
 import com.start3a.memoji.views.EditMemo.Image.Search.SearchImageActivity
 import com.start3a.memoji.views.EditMemo.Text.MemoTextFragment
-import com.start3a.memoji.views.LoadingProgressBar
+import com.start3a.memoji.views.LoadingView
 import kotlinx.android.synthetic.main.activity_edit_memo.*
 import kotlinx.android.synthetic.main.content_edit_memo.*
 import kotlinx.coroutines.*
@@ -132,9 +132,9 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
 
     override fun onBackPressed() {
         launch {
-            LoadingProgressBar.Progress_ProcessingData(this@EditMemoActivity)
+            LoadingView.ProgressProcessingData(this@EditMemoActivity)
             viewModel!!.AddOrUpdate_MemoData()
-            LoadingProgressBar.dialogInterfaceLoading?.dismiss()
+            LoadingView.dialogInterfaceLoading?.dismiss()
             super.onBackPressed()
         }
     }
@@ -233,7 +233,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
             .setSingleChoiceItems(arrayOf("선택", "제거"), -1) { _, index ->
                 if (index == 0) {
                     val intent = Intent(applicationContext, CategoryActivity::class.java).apply {
-                        putExtra("memoID", viewModel!!.memoData.id)
+                        putExtra("curMemoCat", viewModel!!.memoData.category)
                     }
                     startActivityForResult(intent, REQUEST_SELECT_CATEGORY)
                 } else viewModel!!.setCategory("")
@@ -296,6 +296,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
             REQUEST_SELECT_CATEGORY -> {
                 if (resultCode == Activity.RESULT_OK && data != null) {
                     val nameCat = data.getStringExtra("selectedCat") ?: ""
+
                     viewModel!!.setCategory(nameCat)
                 }
             }
@@ -510,7 +511,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
             viewUrl.findViewById<Button>(R.id.btnDone).setOnClickListener {
                 val url = editUrl.text.toString()
                 launch(handler) {
-                    LoadingProgressBar.Progress_ProcessingData(this@EditMemoActivity)
+                    LoadingView.ProgressProcessingData(this@EditMemoActivity)
                     if (GetImageFromURL(url)) {
                         val list = listOf(
                             editUrl.text.toString()
@@ -527,7 +528,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                         "잘못된 URL입니다",
                         Toast.LENGTH_SHORT
                     ).show()
-                    LoadingProgressBar.dialogInterfaceLoading?.dismiss()
+                    LoadingView.dialogInterfaceLoading?.dismiss()
                 }
                 dialogInterface?.dismiss()
             }

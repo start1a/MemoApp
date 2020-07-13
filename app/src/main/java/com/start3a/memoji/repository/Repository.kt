@@ -12,7 +12,7 @@ import com.start3a.memoji.Model.MemoDao
 import com.start3a.memoji.data.Category
 import com.start3a.memoji.data.MemoData
 import com.start3a.memoji.data.MemoImageFilePath
-import com.start3a.memoji.views.LoadingProgressBar
+import com.start3a.memoji.views.LoadingView
 import io.realm.Realm
 import io.realm.RealmList
 import io.realm.RealmResults
@@ -63,28 +63,30 @@ class Repository {
                 MemoAlarmTool.deleteAlarm(context, memo.id, time)
             }
         }
-
         // 캐시 이미지 파일 디렉토리 제거
         setDirEmpty("${context.filesDir}/${MEMOS}")
-
         // 로컬 DB 제거
         mRealmDao.clearDatabase()
     }
 
     fun getUserData(context: Context, notifyListener: () -> Unit) {
-        // 메모 불러오기
+        // 카테고리
+        mFireStoreDao.getUserCategories { catList ->
+            catList.forEach { mRealmDao.addCategory(it) }
+        }
+        // 메모
         mFireStoreDao.getUserMemos(context) { list ->
             mRealmDao.SaveFireStoreMemoData(list)
             notifyListener()
-            LoadingProgressBar.dialogInterfaceLoading?.dismiss()
+            LoadingView.dialogInterfaceLoading?.dismiss()
         }
-        // Storage: 모든 메모 이미지 파일
+        // 모든 메모 이미지 파일
         val dirMemos = "$FILESDIR/${MEMOS}"
         mStorageDao.getImageFile("$USERS/$userID/$dirMemos", dirMemos, notifyListener)
     }
 
     fun getAllCatMemos(nameCat: String): RealmResults<MemoData> {
-        return if (nameCat == "모든 메모") mRealmDao.getAllMemos()
+        return if (nameCat.isEmpty()) mRealmDao.getAllMemos()
         else mRealmDao.getAllCatMemos(nameCat)
     }
 

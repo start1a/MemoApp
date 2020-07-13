@@ -14,18 +14,20 @@ import androidx.lifecycle.ViewModelProvider
 import com.firebase.ui.auth.AuthUI
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
-import com.start3a.memoji.CategoryActivity
+import com.start3a.memoji.views.Category.CategoryActivity
 import com.start3a.memoji.R
 import com.start3a.memoji.repository.Repository
 import com.start3a.memoji.viewmodel.MemoListViewModel
 import com.start3a.memoji.views.EditMemo.EditMemoActivity
-import com.start3a.memoji.views.LoadingProgressBar
+import com.start3a.memoji.views.LoadingView
 import kotlinx.android.synthetic.main.app_bar_memo_list.*
+import kotlinx.android.synthetic.main.nav_header_main.view.*
 
 class MemoListActivity : AppCompatActivity() {
 
     private var viewModel: MemoListViewModel? = null
     private lateinit var mDrawerLayout: DrawerLayout
+    private lateinit var mDrawerNavView: NavigationView
 
     private val REQUEST_AUTH_SIGN_IN = 0
     private val REQUEST_CATEGORY = 1
@@ -43,8 +45,8 @@ class MemoListActivity : AppCompatActivity() {
             ViewModelProvider(viewModelStore, ViewModelProvider.AndroidViewModelFactory(it))
                 .get(MemoListViewModel::class.java).apply {
                     context = applicationContext
-                    val nav: NavigationView = findViewById(R.id.navViewMemoList)
-                    navMenu = nav.menu
+                    mDrawerNavView = findViewById(R.id.navViewMemoList)
+                    navMenu = mDrawerNavView.menu
                 }
         }
 
@@ -81,7 +83,8 @@ class MemoListActivity : AppCompatActivity() {
                         startActivityForResult(intent, REQUEST_CATEGORY)
                     }
 
-                    getString(R.string.none) -> {}
+                    getString(R.string.none) -> {
+                    }
 
                     // 모든 메모 카테고리명
                     else -> {
@@ -99,7 +102,7 @@ class MemoListActivity : AppCompatActivity() {
                 val curTitle = VM.curTab.value!!
 
                 if (curTitle != title)
-                    VM.curTab.value = title
+                    VM.setCurTab(title)
 
                 return@setNavigationItemSelectedListener true
             }
@@ -111,7 +114,6 @@ class MemoListActivity : AppCompatActivity() {
 
         if (shouldStartSignIn())
             startSignIn()
-        else updateDrawerCategory()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -128,6 +130,7 @@ class MemoListActivity : AppCompatActivity() {
             when (item.itemId) {
 
                 android.R.id.home -> {
+                    updateDrawer()
                     mDrawerLayout.openDrawer(GravityCompat.START)
                 }
 
@@ -187,7 +190,7 @@ class MemoListActivity : AppCompatActivity() {
 
     private fun successSignIn() {
         // 사용자 데이터 불러오기
-        LoadingProgressBar.Progress_ProcessingData(this@MemoListActivity)
+        LoadingView.ProgressProcessingData(this@MemoListActivity)
         viewModel!!.isSingingIn = true
         Repository.userID = FirebaseAuth.getInstance().currentUser?.email
         viewModel!!.getUserData()
@@ -201,11 +204,24 @@ class MemoListActivity : AppCompatActivity() {
         startSignIn()
     }
 
-    private fun updateDrawerCategory() {
+    private fun updateDrawer() {
+
+        // 프로필
+        val view = mDrawerNavView.getHeaderView(0)
+        view.textID.text = Repository.userID
+
+        // 메뉴
         viewModel!!.navMenu.run {
             clear()
-            add(R.id.groupCat, R.id.nav_all_memo, Menu.NONE, R.string.menu_all_memo)
-            add(R.id.groupEdit, R.id.nav_add_cat, Menu.NONE, R.string.add_cat)
+
+            add(R.id.groupCat, R.id.nav_all_memo, Menu.NONE, R.string.menu_all_memo).apply {
+                setIcon(R.drawable.ic_baseline_menu_24)
+            }
+
+            add(R.id.groupEdit, R.id.nav_add_cat, Menu.NONE, R.string.add_cat).apply {
+                setIcon(R.drawable.icon_add)
+            }
+
             viewModel!!.categoryLiveData.value?.forEach {
                 add(R.id.groupCat, it.id.toInt(), Menu.NONE, it.nameCat)
             }

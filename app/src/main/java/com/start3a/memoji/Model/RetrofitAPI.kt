@@ -8,6 +8,9 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface RetrofitAPI {
+
+    // 클라이언트 ID, PW는 업로드하지 않음
+
     @GET("search/{type}")
     fun requestSearchImage(
         @Header("X-Naver-Client-Id") clientId: String = "clientId",
@@ -17,4 +20,5 @@ interface RetrofitAPI {
         @Query("start") page: Int,
         @Query("sort") sort: String = "sim"
     ): Observable<ImgObjFromNaver>
+
 }

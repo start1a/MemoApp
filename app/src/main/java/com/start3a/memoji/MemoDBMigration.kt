@@ -11,7 +11,6 @@ class MemoDBMigration : RealmMigration {
     override fun migrate(realm: DynamicRealm, oldVersion: Long, newVersion: Long) {
         var oldVersion = oldVersion
         val schema = realm.schema
-        Log.d("TAGG", "migrage!!")
         /*
     Migrate to version 1: Add MemoData class.
     open class MemoData(
@@ -26,9 +25,7 @@ class MemoDBMigration : RealmMigration {
 ) : RealmObject()
          */
         if (oldVersion == 0L) {
-            Log.d("TAGG", "oldversion 0L")
             if (!schema.contains("MemoData")) {
-                Log.d("TAGG", "MemoData is not contains")
                 schema.create("MemoData")
                     .addField("id", String::class.javaPrimitiveType, FieldAttribute.PRIMARY_KEY)
                     .addField("title", String::class.java)
@@ -62,12 +59,10 @@ class MemoDBMigration : RealmMigration {
     ) : RealmObject()
          */
         if (oldVersion == 1L) {
-            Log.d("TAGG", "oldversion 1L")
             schema.get("MemoData")!!
                 .addField("category", String::class.java, FieldAttribute.REQUIRED)
 
             if (!schema.contains("Category")) {
-                Log.d("TAGG", "category is not contains")
                 schema.create("Category")
                     .addField("idCat", Long::class.javaPrimitiveType, FieldAttribute.PRIMARY_KEY)
                     .addField("nameCat", String::class.java, FieldAttribute.REQUIRED)

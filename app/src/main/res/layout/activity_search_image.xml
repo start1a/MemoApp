@@ -13,7 +13,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
-        android:drawableStart="@drawable/icon_search"
+        android:drawableStart="@drawable/ic_baseline_search_24"
         android:drawablePadding="16dp"
         android:ems="10"
         android:imeOptions="actionSearch"

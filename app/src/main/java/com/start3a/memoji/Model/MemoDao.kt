@@ -1,6 +1,5 @@
 package com.start3a.memoji.Model
 
-import android.util.Log
 import com.start3a.memoji.data.Category
 import com.start3a.memoji.data.MemoData
 import com.start3a.memoji.data.MemoImageFilePath
@@ -143,8 +142,6 @@ class MemoDao(private val realm: Realm) {
                 .equalTo("category", prevName)
                 .findAll()
             list.forEach {
-                Log.d("TAG", list.size.toString())
-                Log.d("TAG", "${it.title} : ${it.category}")
                 it.category = newName
             }
             it.copyToRealmOrUpdate(list)

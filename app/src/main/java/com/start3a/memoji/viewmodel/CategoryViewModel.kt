@@ -12,7 +12,7 @@ class CategoryViewModel: ViewModel() {
     private val repository = Repository()
 
     // Memo
-    var memoID: String? = null
+    var curMemoCat: String? = null
 
     val categoryLiveData: RealmLiveData<Category> by lazy {
         RealmLiveData(repository.getCategories())

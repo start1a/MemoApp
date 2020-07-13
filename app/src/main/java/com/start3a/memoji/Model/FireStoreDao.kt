@@ -29,7 +29,7 @@ class FireStoreDao(private val mFireStore: FirebaseFirestore) {
         val list = mutableListOf<MemoData>()
 
         val completeTaskFunction = Function<QueryDocumentSnapshot, MemoData> { doc ->
-            val objFireStore = doc.toObject(MemoDataFireStore::class.java)
+            val objFireStore = doc.toObject(MemoDataFS::class.java)
             getMemoFireStoreToRealm(objFireStore)
         }
 
@@ -65,6 +65,22 @@ class FireStoreDao(private val mFireStore: FirebaseFirestore) {
         setDBAndNotify(Repository.MEMOS, completeTaskFunction, observer)
     }
 
+    fun getUserCategories(setToRealmListener: (MutableList<Category>) -> Unit) {
+        mFireStore.collection(Repository.USERS).document(Repository.userID!!)
+            .collection(Repository.CATEGORIES)
+            .get()
+            .addOnSuccessListener { docs ->
+                val list = mutableListOf<Category>()
+                docs.forEach { doc ->
+                    val cat = doc.toObject(CategoryFS::class.java).run {
+                        Category(id.toLong(), nameCat)
+                    }
+                    list.add(cat)
+                }
+                setToRealmListener(list)
+            }
+    }
+
     // 컬렉션마다 타입을 지정하여 FireStore로부터 데이터 요청
     private fun <R : Any> setDBAndNotify(
         nameCollection: String,
@@ -87,7 +103,7 @@ class FireStoreDao(private val mFireStore: FirebaseFirestore) {
             }
     }
 
-    private fun getMemoFireStoreToRealm(memo: MemoDataFireStore): MemoData {
+    private fun getMemoFireStoreToRealm(memo: MemoDataFS): MemoData {
         return MemoData(
             memo.id,
             memo.title,
@@ -193,7 +209,6 @@ class FireStoreDao(private val mFireStore: FirebaseFirestore) {
             .get()
             .addOnSuccessListener { docs ->
                 docs.forEach {
-                    Log.d(TAG, it.data.get("title").toString() + " : " + it.data.get("category"))
                     it.reference.update("category", newName)
                 }
             }

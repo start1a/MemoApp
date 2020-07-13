@@ -18,7 +18,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity android:name=".CategoryActivity" />
+        <activity
+            android:name=".views.Category.CategoryActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".views.IntroActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
