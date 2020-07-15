@@ -22,6 +22,7 @@ class SearchImageViewModel : ViewModel() {
         val list = imageList.value!!
         RetrofitService.getService().requestSearchImage(
             type = "image.json",
+            display = numDisplay,
             keyword = query,
             page = searchStartLocation
         ).subscribeOn(Schedulers.io())
@@ -38,6 +39,7 @@ class SearchImageViewModel : ViewModel() {
     }
 
     fun clearList() {
+        searchStartLocation = 1
         imageList.value?.clear()
     }
 

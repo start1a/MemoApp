@@ -40,7 +40,7 @@ class SearchImageActivity : AppCompatActivity() {
                     itemClickListener = { sendDataList, index ->
                         val intent =
                             Intent(this@SearchImageActivity, ImageViewActivity::class.java).apply {
-                                putStringArrayListExtra("images", getImagePathList(sendDataList))
+                                putStringArrayListExtra("images", getImagePathArrayList(sendDataList))
                                 putExtra("selectedIndex", index)
                             }
                         startActivity(intent)
@@ -90,7 +90,7 @@ class SearchImageActivity : AppCompatActivity() {
         imm.hideSoftInputFromWindow(windowToken, 0)
     }
 
-    private fun getImagePathList(inputList: MutableList<NaverImage>): ArrayList<String> {
+    private fun getImagePathArrayList(inputList: MutableList<NaverImage>): ArrayList<String> {
         return arrayListOf<String>().apply {
             inputList.forEach { add(it.link) }
         }

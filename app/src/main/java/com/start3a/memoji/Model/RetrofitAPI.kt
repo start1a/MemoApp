@@ -13,10 +13,11 @@ interface RetrofitAPI {
 
     @GET("search/{type}")
     fun requestSearchImage(
-        @Header("X-Naver-Client-Id") clientId: String = "clientId",
-        @Header("X-Naver-Client-Secret") clientSecret: String = "clientSecret",
+        @Header("X-Naver-Client-Id") clientId: String = "SeQI_Y_djs9WTutxA5h1",
+        @Header("X-Naver-Client-Secret") clientSecret: String = "fx9KmkoY87",
         @Path("type") type: String,
         @Query("query") keyword: String,
+        @Query("display") display: Int,
         @Query("start") page: Int,
         @Query("sort") sort: String = "sim"
     ): Observable<ImgObjFromNaver>
