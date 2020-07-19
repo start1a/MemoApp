@@ -99,7 +99,7 @@ class MemoImageFragment : Fragment() {
             // 선택된 이미지 삭제 리스너
             VM.deleteImageListListener = {
                 // 데이터 삭제
-                VM.DeleteImageList(listImageAdapter.deleteImageList)
+                VM.deleteImageList(listImageAdapter.deleteImageList)
                 // 삭제 후 체크박스 해제
                 listImageAdapter.let {
                     it.deleteImageList.clear()

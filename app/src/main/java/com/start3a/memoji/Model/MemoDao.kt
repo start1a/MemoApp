@@ -153,7 +153,7 @@ class MemoDao(private val realm: Realm) {
             val list = realm.where(MemoData::class.java)
                 .equalTo("category", nameCat)
                 .findAll()
-            list.deleteAllFromRealm()
+            list.forEach { it.category = "" }
         }
     }
 }

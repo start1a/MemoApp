@@ -84,7 +84,7 @@ class MemoAlarmFragment : Fragment() {
             // 선택된 알람 삭제 리스너
             VM.deleteAlarmListListener = {
                 // 데이터 삭제
-                VM.DeleteAlarm(listAlarmAdapter.deleteAlarmList)
+                VM.deleteAlarm(listAlarmAdapter.deleteAlarmList)
                 // 삭제 후 선택 아이템 체크 삭제
                 listAlarmAdapter.let {
                     it.deleteAlarmList.clear()

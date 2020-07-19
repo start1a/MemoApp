@@ -94,8 +94,8 @@ class FireStoreDao(private val mFireStore: FirebaseFirestore) {
                 Observable
                     .fromIterable(documents)
                     .subscribeOn(Schedulers.io())
-                    .map(function)
                     .observeOn(AndroidSchedulers.mainThread())
+                    .map(function)
                     .subscribe(observer)
             }
             .addOnFailureListener { exception ->

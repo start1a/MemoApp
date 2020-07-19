@@ -83,7 +83,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                     id = intent.getStringExtra("MEMO_ID")
                     VM.context = applicationContext
                     if (id != null)
-                        VM.Load_MemoData(id!!)
+                        VM.loadMemo(id!!)
                     VM.setEditable(id == null)
                     // 액티비티, 프래그먼트 모두 datePicker 호출 가능
                     VM.datePickerShowListener = { openDateDialog() }
@@ -133,7 +133,7 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
     override fun onBackPressed() {
         launch {
             LoadingView.ProgressProcessingData(this@EditMemoActivity)
-            viewModel!!.AddOrUpdate_MemoData()
+            viewModel!!.addOrUpdateMemo()
             LoadingView.dialogInterfaceLoading?.dismiss()
             super.onBackPressed()
         }
@@ -417,14 +417,14 @@ class EditMemoActivity : AppCompatActivity(), CoroutineScope {
                 }
                 // 새 알람 추가
                 if (index == -1) {
-                    viewModel?.SetAlarm(dialogCalendar.time)?.let { isSuccess ->
+                    viewModel?.setAlarm(dialogCalendar.time)?.let { isSuccess ->
                         if (!isSuccess)
                             Toast.makeText(this, "동일한 알람이 존재합니다", Toast.LENGTH_SHORT).show()
                     }
                 }
                 // 기존 알람 내용 수정
                 else {
-                    viewModel?.UpdateAlarm(index, dialogCalendar.time)?.let { isSuccess ->
+                    viewModel?.updateAlarm(index, dialogCalendar.time)?.let { isSuccess ->
                         if (!isSuccess)
                             Toast.makeText(this, "동일한 알람이 존재하여 변경되지 않았습니다", Toast.LENGTH_SHORT)
                                 .show()

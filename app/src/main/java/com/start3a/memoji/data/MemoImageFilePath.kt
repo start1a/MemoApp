@@ -7,4 +7,9 @@ open class MemoImageFilePath(
     var uri: String = "",
     var thumbnailPath: String = "",
     var originalPath : String = ""
-): RealmObject()
+): RealmObject() {
+    override fun equals(other: Any?): Boolean {
+        val o = other as MemoImageFilePath
+        return uri == o.uri && thumbnailPath == o.thumbnailPath && originalPath == o.originalPath
+    }
+}

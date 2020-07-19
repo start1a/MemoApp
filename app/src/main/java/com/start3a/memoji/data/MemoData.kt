@@ -18,7 +18,36 @@ open class MemoData(
     var imageFileLinks: RealmList<MemoImageFilePath> = RealmList(),
     var alarmTimeList: RealmList<Date> = RealmList(),
     var category: String = ""
-) : RealmObject()
+) : RealmObject() {
+
+    override fun equals(other: Any?): Boolean {
+        other as MemoData
+        if (title != other.title || content != other.content || summary != other.summary ||
+            date != other.date || category != other.category
+        )
+            return false
+
+        if (imageFileLinks.size != other.imageFileLinks.size) return false
+        if (alarmTimeList.size != other.alarmTimeList.size) return false
+
+        // 이미지
+        val sizeImg = imageFileLinks.size
+        for (i in 0 until sizeImg) {
+            if (imageFileLinks[i] != other.imageFileLinks[i])
+                return false
+        }
+
+        // 알람
+        val sizeAlm = alarmTimeList.size
+        for (i in 0 until sizeAlm) {
+            if (alarmTimeList[i] != other.alarmTimeList[i])
+                return false
+        }
+
+        return true
+    }
+
+}
 
 open class Category(
     @PrimaryKey

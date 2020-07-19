@@ -65,6 +65,7 @@ class EditMemoViewModel : ViewModel() {
     // 새 메모 = null 기존 메모 = !null
     var memoId: String? = null
     var memoData = MemoData()
+    private var prevMemo = MemoData()
 
     // UI 정보
     var mMenu: Menu? = null
@@ -110,8 +111,9 @@ class EditMemoViewModel : ViewModel() {
     }
 
     // 메모 불러오기
-    fun Load_MemoData(id: String) {
+    fun loadMemo(id: String) {
         memoData = repository.loadMemo(id)
+        prevMemo = repository.loadMemo(id)
         memoId = id
         titleTemp = memoData.title
         contentTemp = memoData.content
@@ -121,101 +123,104 @@ class EditMemoViewModel : ViewModel() {
     }
 
     // 메모 수정
-    suspend fun AddOrUpdate_MemoData() {
+    suspend fun addOrUpdateMemo() {
         imageFileLinks.value?.let { images ->
             // 내용이 존재할 경우
             if (titleTemp.isNotEmpty() || contentTemp.isNotEmpty() || images.size > 0) {
-                val alarmTimeListValue = alarmTimeList.value!!
+                // 메모 내용 변경 여부
+                if (memoData != prevMemo) {
+                    val alarmTimeListValue = alarmTimeList.value!!
 
-                // 새 메모일 경우
-                // 해당 메모 이미지 디렉토리 생성
-                if (memoId.isNullOrEmpty()) {
-                    ImageCreateManager.setImageDirectory(context.filesDir, memoData.id)
-                }
-
-                // 파일이 있는 이미지 삭제 리스트
-                if (imageFileDeleteList.size > 0) {
-                    repository.deleteImageOfMemo(imageFileDeleteList)
-                    for (image in imageFileDeleteList) {
-                        File(image.thumbnailPath).delete()
-                        File(image.originalPath).delete()
+                    // 새 메모일 경우
+                    // 해당 메모 이미지 디렉토리 생성
+                    if (memoId.isNullOrEmpty()) {
+                        ImageCreateManager.setImageDirectory(context.filesDir, memoData.id)
                     }
-                }
 
-                val listImageForStorage = mutableListOf<MemoImageFilePath>()
-                backScope.launch {
-
-                    var num = 0
-                    val max = images.size.run {
-                        if (this < MAX_COROUTINE_JOB)
-                            this
-                        else MAX_COROUTINE_JOB
-                    }
-                    var index = images.size - 1
-                    while (num++ < max) {
-                        launch {
-                            // 거꾸로 이미지 리스트 탐색
-                            while (index >= 0) {
-                                // 파일이 존재하지 않는 아이템만 탐색 / 파일 저장
-                                if (index-- >= 0 && images[index + 1]!!.thumbnailPath.isEmpty()) {
-                                    val item = images[index + 1]!!
-                                    val fileLinks = GetMemoImageFilePath(
-                                        item.uri,
-                                        "${context.filesDir}/${Repository.MEMOS}/${memoData.id}"
-                                    )
-                                    item.thumbnailPath = fileLinks.thumbnailPath
-                                    item.originalPath = fileLinks.originalPath
-                                    listImageForStorage.add(fileLinks)
-                                } else break
-                            }
+                    // 파일이 있는 이미지 삭제 리스트
+                    if (imageFileDeleteList.size > 0) {
+                        repository.deleteImageOfMemo(imageFileDeleteList)
+                        for (image in imageFileDeleteList) {
+                            File(image.thumbnailPath).delete()
+                            File(image.originalPath).delete()
                         }
                     }
-                }.join()
 
-                // 기존 알람 삭제
-                alarmTimeListTemp.forEach {
-                    // 이전 시간 알람 OR 사용자가 삭제한 알람
-                    if (it.before(Date()) || !alarmTimeListValue.contains(it))
-                        MemoAlarmTool.deleteAlarm(context, memoData.id, it)
-                }
-                // 새로 알람 갱신
-                val deleteIndexList = mutableListOf<Int>()
-                for (i in 0 until alarmTimeListValue.size) {
-                    val time = alarmTimeListValue[i]!!
-                    // 현재 이후 알람
-                    if (time.after(Date())) {
-                        // 신규 생성 알람
-                        if (!alarmTimeListTemp.contains(time))
-                            MemoAlarmTool.addAlarm(context, memoData.id, time)
+                    val listImageForStorage = mutableListOf<MemoImageFilePath>()
+                    backScope.launch {
+
+                        var num = 0
+                        val max = images.size.run {
+                            if (this < MAX_COROUTINE_JOB)
+                                this
+                            else MAX_COROUTINE_JOB
+                        }
+                        var index = images.size - 1
+                        while (num++ < max) {
+                            launch {
+                                // 거꾸로 이미지 리스트 탐색
+                                while (index >= 0) {
+                                    // 파일이 존재하지 않는 아이템만 탐색 / 파일 저장
+                                    if (index-- >= 0 && images[index + 1]!!.thumbnailPath.isEmpty()) {
+                                        val item = images[index + 1]!!
+                                        val fileLinks = getMemoImageFilePath(
+                                            item.uri,
+                                            "${context.filesDir}/${Repository.MEMOS}/${memoData.id}"
+                                        )
+                                        item.thumbnailPath = fileLinks.thumbnailPath
+                                        item.originalPath = fileLinks.originalPath
+                                        listImageForStorage.add(fileLinks)
+                                    } else break
+                                }
+                            }
+                        }
+                    }.join()
+
+                    // 기존 알람 삭제
+                    alarmTimeListTemp.forEach {
+                        // 이전 시간 알람 OR 사용자가 삭제한 알람
+                        if (it.before(Date()) || !alarmTimeListValue.contains(it))
+                            MemoAlarmTool.deleteAlarm(context, memoData.id, it)
                     }
-                    // 시간이 지난 알람은 제거 리스트에 추가됨
-                    // ConcurrentModificationException 방지
-                    // 어떤 스레드가 Iterator가 반복중인 Collection을 수정하려 할 때 발생
-                    else deleteIndexList.add(i)
+                    // 새로 알람 갱신
+                    val deleteIndexList = mutableListOf<Int>()
+                    for (i in 0 until alarmTimeListValue.size) {
+                        val time = alarmTimeListValue[i]!!
+                        // 현재 이후 알람
+                        if (time.after(Date())) {
+                            // 신규 생성 알람
+                            if (!alarmTimeListTemp.contains(time))
+                                MemoAlarmTool.addAlarm(context, memoData.id, time)
+                        }
+                        // 시간이 지난 알람은 제거 리스트에 추가됨
+                        // ConcurrentModificationException 방지
+                        // 어떤 스레드가 Iterator가 반복중인 Collection을 수정하려 할 때 발생
+                        else deleteIndexList.add(i)
+                    }
+                    // 지난 알람 삭제
+                    for (i in 0 until deleteIndexList.size)
+                        alarmTimeListValue.removeAt(i)
+
+                    // 카테고리
+                    memoData.category = category.value!!
+
+                    //  메모를 DB에 저장
+                    repository.saveMemo(
+                        memoData,
+                        titleTemp,
+                        contentTemp,
+                        images,
+                        listImageForStorage,
+                        alarmTimeListValue
+                    )
                 }
-                // 지난 알람 삭제
-                for (i in 0 until deleteIndexList.size)
-                    alarmTimeListValue.removeAt(i)
-
-                // 카테고리
-                memoData.category = category.value!!
-
-                //  메모를 DB에 저장
-                repository.saveMemo(
-                    memoData,
-                    titleTemp,
-                    contentTemp,
-                    images,
-                    listImageForStorage,
-                    alarmTimeListValue
-                )
             }
             // 내용이 없는 기존 메모이면 DB + 디렉토리 삭제
             else Delete_MemoData()
         }
     }
 
-    private fun GetMemoImageFilePath(imgSrc: String, memoDir: String): MemoImageFilePath {
+    private fun getMemoImageFilePath(imgSrc: String, memoDir: String): MemoImageFilePath {
         var bitmapOriginal: Bitmap? = null
         var bitmapThumbnail: Bitmap? = null
 
@@ -279,7 +284,7 @@ class EditMemoViewModel : ViewModel() {
     }
 
     // 이미지 삭제
-    fun DeleteImageList(list: List<Int>) {
+    fun deleteImageList(list: List<Int>) {
         // 내림차순 정렬 후 인덱스 별 삭제
         Collections.sort(list, Collections.reverseOrder())
 
@@ -298,7 +303,7 @@ class EditMemoViewModel : ViewModel() {
         }
     }
 
-    fun SetAlarm(time: Date): Boolean {
+    fun setAlarm(time: Date): Boolean {
         // 동일 알람이 존재하지 않아야 생성됨
         val isSetable = alarmTimeList.value!!.none { it == time }
         if (isSetable) {
@@ -311,7 +316,7 @@ class EditMemoViewModel : ViewModel() {
         return isSetable
     }
 
-    fun UpdateAlarm(index: Int, time: Date): Boolean {
+    fun updateAlarm(index: Int, time: Date): Boolean {
         // 동일 알람이 존재하지 않아야 수정됨
         val isUpdatable = alarmTimeList.value!!.none { it == time }
         if (isUpdatable) {
@@ -321,7 +326,7 @@ class EditMemoViewModel : ViewModel() {
         return isUpdatable
     }
 
-    fun DeleteAlarm(list: List<Int>) {
+    fun deleteAlarm(list: List<Int>) {
         // 내림차순 정렬
         Collections.sort(list, Collections.reverseOrder())
         val deleteList = alarmTimeList.value!!
