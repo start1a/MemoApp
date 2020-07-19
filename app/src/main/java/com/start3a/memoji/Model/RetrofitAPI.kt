@@ -13,8 +13,8 @@ interface RetrofitAPI {
 
     @GET("search/{type}")
     fun requestSearchImage(
-        @Header("X-Naver-Client-Id") clientId: String = "SeQI_Y_djs9WTutxA5h1",
-        @Header("X-Naver-Client-Secret") clientSecret: String = "fx9KmkoY87",
+        @Header("X-Naver-Client-Id") clientId: String = "clientID",
+        @Header("X-Naver-Client-Secret") clientSecret: String = "clientSecret",
         @Path("type") type: String,
         @Query("query") keyword: String,
         @Query("display") display: Int,
